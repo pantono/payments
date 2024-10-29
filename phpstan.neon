@@ -1,0 +1,12 @@
+parameters:
+  level: 8
+  paths:
+    - src
+  bootstrapFiles:
+    - vendor/autoload.php
+  excludePaths:
+    - "*/Tests/*"
+  ignoreErrors:
+    - message: '#^Method (.*)::(.*) return type has no value type specified in iterable type array.$#'
+    - message: '#^Method (.*)::(.*) has parameter (.*) with no value type specified in iterable type array.$#'
+    - message: '#^Property (.*)::(.*) type has no value type specified in iterable type array.$#'
