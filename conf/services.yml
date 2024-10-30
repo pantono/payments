@@ -1,0 +1,2 @@
+Payments:
+  class: Pantono\Payments\Payments
