@@ -21,7 +21,7 @@ final class Payments extends AbstractMigration
 
         $this->table('payment_gateway')
             ->addColumn('name', 'string')
-            ->addColumn('provider_id', 'integer')
+            ->addColumn('provider_id', 'integer', ['signed' => false])
             ->addColumn('settings', 'json')
             ->addForeignKey('provider_id', 'payment_provider', 'id')
             ->create();
