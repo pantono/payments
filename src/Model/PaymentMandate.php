@@ -13,7 +13,7 @@ class PaymentMandate
     use SavableModel;
 
     private ?int $id = null;
-    #[FieldName('payment_gateway_id'), Locator(methodName: 'getGatewayById', className: Payments::class)]
+    #[FieldName('gateway_id'), Locator(methodName: 'getGatewayById', className: Payments::class)]
     private PaymentGateway $paymentGateway;
     #[FieldName('status_id'), Locator(methodName: 'getMandateStatusById', className: Payments::class)]
     private PaymentMandateStatus $status;
