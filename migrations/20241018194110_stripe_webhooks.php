@@ -13,6 +13,7 @@ final class StripeWebhooks extends AbstractMigration
             ->addColumn('type', 'string')
             ->addColumn('data', 'json')
             ->addColumn('processed', 'boolean')
+            ->addIndex('type')
             ->create();
     }
 }
