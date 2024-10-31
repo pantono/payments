@@ -15,7 +15,8 @@ class PaymentMandate
     private ?int $id = null;
     #[FieldName('payment_gateway_id'), Locator(methodName: 'getGatewayById', className: Payments::class)]
     private PaymentGateway $paymentGateway;
-    private bool $active;
+    #[FieldName('payment_gateway_id'), Locator(methodName: 'getGatewayById', className: Payments::class)]
+    private PaymentMandateStatus $status;
     private ?string $reference = null;
     private ?\DateTimeImmutable $startDate = null;
     private ?\DateTimeImmutable $endDate = null;
@@ -52,16 +53,6 @@ class PaymentMandate
         $this->reference = $reference;
     }
 
-    public function isActive(): bool
-    {
-        return $this->active;
-    }
-
-    public function setActive(bool $active): void
-    {
-        $this->active = $active;
-    }
-
     public function getStartDate(): ?\DateTimeImmutable
     {
         return $this->startDate;
@@ -90,5 +81,15 @@ class PaymentMandate
     public function setData(array $data): void
     {
         $this->data = $data;
+    }
+
+    public function getStatus(): PaymentMandateStatus
+    {
+        return $this->status;
+    }
+
+    public function setStatus(PaymentMandateStatus $status): void
+    {
+        $this->status = $status;
     }
 }
