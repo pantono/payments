@@ -4,6 +4,7 @@ namespace Pantono\Payments\Repository;
 
 use Pantono\Database\Repository\MysqlRepository;
 use Pantono\Payments\Model\Payment;
+use Pantono\Payments\Model\PaymentMandate;
 
 class PaymentsRepository extends MysqlRepository
 {
@@ -38,5 +39,13 @@ class PaymentsRepository extends MysqlRepository
     public function getPaymentMandateById(int $id): ?array
     {
         return $this->selectSingleRow('payment_mandate', 'id', $id);
+    }
+
+    public function saveMandate(PaymentMandate $mandate): void
+    {
+        $id = $this->insertOrUpdateCheck('payment_mandate', 'id', $mandate->getId(), $mandate->getAllData());
+        if ($id) {
+            $mandate->setId($id);
+        }
     }
 }

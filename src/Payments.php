@@ -13,6 +13,8 @@ use Pantono\Payments\Event\PrePaymentSaveEvent;
 use Pantono\Payments\Event\PostPaymentSaveEvent;
 use Pantono\Payments\Provider\AbstractProvider;
 use Pantono\Payments\Model\PaymentMandate;
+use Pantono\Payments\Event\PreMandateSaveSaveEvent;
+use Pantono\Payments\Event\PostMandateSaveSaveEvent;
 
 class Payments
 {
@@ -101,7 +103,18 @@ class Payments
 
     public function saveMandate(PaymentMandate $mandate): void
     {
+        $previous = $mandate->getId() ? $this->getMandateById($mandate->getId()) : null;
+        $event = new PreMandateSaveSaveEvent();
+        $event->setCurrent($mandate);
+        $event->setPrevious($previous);
+        $this->dispatcher->dispatch($event);
 
+        $this->repository->saveMandate($mandate);
+
+        $event = new PostMandateSaveSaveEvent();
+        $event->setCurrent($mandate);
+        $event->setPrevious($previous);
+        $this->dispatcher->dispatch($event);
     }
 
     private function getProviderController(PaymentGateway $gateway): AbstractProvider
