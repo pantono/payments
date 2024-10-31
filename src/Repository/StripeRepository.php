@@ -9,7 +9,7 @@ class StripeRepository extends MysqlRepository
 {
     public function saveWebhook(StripeWebhook $webhook): void
     {
-        $id = $this->insertOrUpdateCheck('stripe_webhook', 'id', $webhook->getId(), $webhook->getAllData());
+        $id = $this->insertOrUpdateCheck('payments_stripe_webhook', 'id', $webhook->getId(), $webhook->getAllData());
         if ($id) {
             $webhook->setId($id);
         }
