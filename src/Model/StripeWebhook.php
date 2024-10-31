@@ -11,6 +11,7 @@ class StripeWebhook
 
     private ?int $id = null;
     private \DateTimeImmutable $date;
+    private string $type;
     #[Filter('json_decode')]
     private array $data;
 
@@ -42,5 +43,15 @@ class StripeWebhook
     public function setData(array $data): void
     {
         $this->data = $data;
+    }
+
+    public function getType(): string
+    {
+        return $this->type;
+    }
+
+    public function setType(string $type): void
+    {
+        $this->type = $type;
     }
 }

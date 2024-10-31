@@ -69,10 +69,11 @@ class Stripe extends AbstractProvider
         return $this->client;
     }
 
-    public function ingestWebhook(array $data): StripeWebhook
+    public function ingestWebhook(string $type, array $data): StripeWebhook
     {
         $webhook = new StripeWebhook();
         $webhook->setData($data);
+        $webhook->setType($type);
         $webhook->setDate(new \DateTimeImmutable());
         $this->repository->saveWebhook($webhook);
         return $webhook;
