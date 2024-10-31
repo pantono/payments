@@ -3,7 +3,7 @@
 namespace Pantono\Payments\Provider;
 
 use Pantono\Payments\Model\Payment;
-use src\Payments;
+use Pantono\Payments\Payments;
 use Pantono\Payments\Model\PaymentGateway;
 use Pantono\Payments\Model\PaymentMandate;
 use Pantono\Payments\Exception\GatewayDoesNotSupportMandates;

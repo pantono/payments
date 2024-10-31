@@ -68,7 +68,7 @@ class Payments
         $payment->setRequestData($requestData);
         $payment->setStatus($pendingStatus);
         $this->savePayment($payment);
-        $this->getProviderController($gateway->getProvider())->initiate($payment);
+        $this->getProviderController($gateway)->initiate($payment);
         return $payment;
     }
 
@@ -79,7 +79,7 @@ class Payments
         $mandate->setData($requestData);
 
         $this->saveMandate($mandate);
-        $this->getProviderController($gateway->getProvider())->processMandate($mandate);
+        $this->getProviderController($gateway)->processMandate($mandate);
         return $mandate;
     }
 
@@ -104,12 +104,12 @@ class Payments
 
     }
 
-    private function getProviderController(PaymentProvider $provider): AbstractProvider
+    private function getProviderController(PaymentGateway $gateway): AbstractProvider
     {
-        if (!class_exists($provider->getController())) {
+        if (!class_exists($gateway->getProvider()->getController())) {
             throw new \RuntimeException('Controller for provider does not exist');
         }
-        $controllerName = $provider->getController();;
+        $controllerName = $gateway->getProvider()->getController();
         /**
          * @var AbstractProvider $controller
          */
