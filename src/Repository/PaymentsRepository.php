@@ -48,4 +48,9 @@ class PaymentsRepository extends MysqlRepository
             $mandate->setId($id);
         }
     }
+
+    public function getMandateStatusById(int $id): ?array
+    {
+        return $this->selectSingleRow('payment_mandate_status', 'id', $id);
+    }
 }
