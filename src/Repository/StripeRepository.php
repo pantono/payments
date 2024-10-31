@@ -17,8 +17,8 @@ class StripeRepository extends MysqlRepository
 
     public function getMandateBySetupIntentId(string $setupIntentId): ?array
     {
-        $sql = "SELECT * from payment_madate where data->>'$.session_response.setup_intent' = :setupIntentId";
-        $row = $this->getDb()->fetchRow($sql, ['setupIntent' => $setupIntentId]);
+        $sql = "SELECT * from payment_mandate where data->>'$.session_response.setup_intent' = :id";
+        $row = $this->getDb()->fetchRow($sql, ['id' => $setupIntentId]);
         return !empty($row) ? $row : null;
     }
 }
