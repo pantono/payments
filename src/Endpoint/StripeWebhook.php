@@ -29,7 +29,7 @@ class StripeWebhook extends AbstractEndpoint
          * @var Stripe $provider
          */
         $provider = $this->payments->getProviderController($gateway);
-        $provider->ingestWebhook($parameters->all());
+        $provider->ingestWebhook($parameters->get('type'), $parameters->all());
         return ['success' => true];
     }
 }
