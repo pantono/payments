@@ -6,9 +6,12 @@ use Pantono\Contracts\Attributes\Filter;
 use Pantono\Contracts\Attributes\Locator;
 use Pantono\Payments\Payments;
 use Pantono\Contracts\Attributes\FieldName;
+use Pantono\Database\Traits\SavableModel;
 
 class PaymentGateway
 {
+    use SavableModel;
+
     private ?int $id = null;
     #[Locator(methodName: 'getProviderById', className: Payments::class), FieldName('provider_id')]
     private PaymentProvider $provider;

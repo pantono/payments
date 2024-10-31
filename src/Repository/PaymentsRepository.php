@@ -5,6 +5,7 @@ namespace Pantono\Payments\Repository;
 use Pantono\Database\Repository\MysqlRepository;
 use Pantono\Payments\Model\Payment;
 use Pantono\Payments\Model\PaymentMandate;
+use Pantono\Payments\Model\PaymentGateway;
 
 class PaymentsRepository extends MysqlRepository
 {
@@ -52,5 +53,13 @@ class PaymentsRepository extends MysqlRepository
     public function getMandateStatusById(int $id): ?array
     {
         return $this->selectSingleRow('payment_mandate_status', 'id', $id);
+    }
+
+    public function saveGateway(PaymentGateway $gateway): void
+    {
+        $id = $this->insertOrUpdateCheck('payment_gateway', 'id', $gateway->getId(), $gateway->getAllData());
+        if ($id) {
+            $gateway->setId($id);
+        }
     }
 }

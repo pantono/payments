@@ -17,6 +17,8 @@ use Pantono\Payments\Event\PreMandateSaveSaveEvent;
 use Pantono\Payments\Event\PostMandateSaveSaveEvent;
 use Pantono\Payments\Model\PaymentMandateStatus;
 use Pantono\Config\Config;
+use Pantono\Payments\Event\PreGatewaySaveEvent;
+use Pantono\Payments\Event\PostGatewaySaveEvent;
 
 class Payments
 {
@@ -131,6 +133,22 @@ class Payments
 
         $event = new PostMandateSaveSaveEvent();
         $event->setCurrent($mandate);
+        $event->setPrevious($previous);
+        $this->dispatcher->dispatch($event);
+    }
+
+    public function saveGateway(PaymentGateway $gateway): void
+    {
+        $previous = $gateway->getId() ? $this->getPaymentGatewayById($gateway->getId()) : null;
+        $event = new PreGatewaySaveEvent();
+        $event->setCurrent($gateway);
+        $event->setPrevious($previous);
+        $this->dispatcher->dispatch($event);
+
+        $this->repository->saveGateway($gateway);
+
+        $event = new PostGatewaySaveEvent();
+        $event->setCurrent($gateway);
         $event->setPrevious($previous);
         $this->dispatcher->dispatch($event);
     }
