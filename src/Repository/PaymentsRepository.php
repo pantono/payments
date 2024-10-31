@@ -17,7 +17,7 @@ class PaymentsRepository extends MysqlRepository
         return $this->selectSingleRow('payment_gateway', 'id', $id);
     }
 
-    public function getPaymentProviderById(int $id): ?array
+    public function getProviderById(int $id): ?array
     {
         return $this->selectSingleRow('payment_provider', 'id', $id);
     }

@@ -42,7 +42,7 @@ class Payments
 
     public function getProviderById(int $id): ?PaymentProvider
     {
-        return $this->hydrator->hydrate(PaymentProvider::class, $this->repository->getPaymentProviderById($id));
+        return $this->hydrator->hydrate(PaymentProvider::class, $this->repository->getProviderById($id));
     }
 
     public function getPaymentStatusById(int $id): ?PaymentStatus
