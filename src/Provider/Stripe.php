@@ -67,6 +67,11 @@ class Stripe extends AbstractProvider
         $this->getPayments()->saveMandate($mandate);
     }
 
+    public function chargeMandate(PaymentMandate $mandate, int $amountInPence)
+    {
+
+    }
+
     public function getClient(): StripeClient
     {
         if (!$this->client) {

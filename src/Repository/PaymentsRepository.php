@@ -11,7 +11,12 @@ class PaymentsRepository extends MysqlRepository
 {
     public function getPaymentById(int $id): ?array
     {
-        return $this->selectSingleRow('payment', 'id', $id);
+        return $this->selectSingleRowLock('payment', 'id', $id);
+    }
+
+    public function getPaymentByReference(mixed $reference): ?array
+    {
+        return $this->selectSingleRowLock('payment', 'reference', $reference);
     }
 
     public function getPaymentGatewayById(int $id): ?array
@@ -39,7 +44,7 @@ class PaymentsRepository extends MysqlRepository
 
     public function getPaymentMandateById(int $id): ?array
     {
-        return $this->selectSingleRow('payment_mandate', 'id', $id);
+        return $this->selectSingleRowLock('payment_mandate', 'id', $id);
     }
 
     public function saveMandate(PaymentMandate $mandate): void
@@ -70,6 +75,6 @@ class PaymentsRepository extends MysqlRepository
 
     public function getPaymentMandateByReference(string $reference): ?array
     {
-        return $this->selectSingleRow('payment_mandate', 'reference', $reference);
+        return $this->selectSingleRowLock('payment_mandate', 'reference', $reference);
     }
 }
