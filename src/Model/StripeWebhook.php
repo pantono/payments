@@ -4,12 +4,17 @@ namespace Pantono\Payments\Model;
 
 use Pantono\Contracts\Attributes\Filter;
 use Pantono\Database\Traits\SavableModel;
+use Pantono\Contracts\Attributes\Locator;
+use Pantono\Payments\Payments;
+use Pantono\Contracts\Attributes\FieldName;
 
 class StripeWebhook
 {
     use SavableModel;
 
     private ?int $id = null;
+    #[Locator(methodName: 'getPaymentGatewayById', className: Payments::class), FieldName('gateway_id')]
+    private PaymentGateway $gateway;
     private \DateTimeImmutable $date;
     private string $type;
     #[Filter('json_decode')]
@@ -23,6 +28,16 @@ class StripeWebhook
     public function setId(?int $id): void
     {
         $this->id = $id;
+    }
+
+    public function getGateway(): PaymentGateway
+    {
+        return $this->gateway;
+    }
+
+    public function setGateway(PaymentGateway $gateway): void
+    {
+        $this->gateway = $gateway;
     }
 
     public function getDate(): \DateTimeImmutable
