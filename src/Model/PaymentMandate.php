@@ -4,11 +4,13 @@ namespace Pantono\Payments\Model;
 
 use Pantono\Contracts\Attributes\FieldName;
 use Pantono\Contracts\Attributes\Filter;
+use Pantono\Contracts\Attributes\Locator;
+use Pantono\Payments\Payments;
 
 class PaymentMandate
 {
     private ?int $id = null;
-    #[FieldName('payment_gateway_id')]
+    #[FieldName('payment_gateway_id'), Locator(methodName: 'getGatewayById', className: Payments::class)]
     private PaymentGateway $paymentGateway;
     private bool $active;
     private ?string $reference = null;

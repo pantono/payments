@@ -3,10 +3,13 @@
 namespace Pantono\Payments\Model;
 
 use Pantono\Contracts\Attributes\Filter;
+use Pantono\Contracts\Attributes\Locator;
+use Pantono\Payments\Payments;
 
 class PaymentGateway
 {
     private ?int $id = null;
+    #[Locator(methodName: 'getProviderById', className: Payments::class)]
     private PaymentProvider $provider;
     private string $name;
     #[Filter('json_decode')]

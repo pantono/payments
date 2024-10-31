@@ -5,13 +5,15 @@ namespace Pantono\Payments\Model;
 use Pantono\Contracts\Attributes\FieldName;
 use Pantono\Contracts\Attributes\Filter;
 use Pantono\Database\Traits\SavableModel;
+use Pantono\Contracts\Attributes\Locator;
+use Pantono\Payments\Payments;
 
 class Payment
 {
     use SavableModel;
 
     private ?int $id = null;
-    #[FieldName('gateway_id')]
+    #[FieldName('gateway_id'), Locator(methodName: 'getGatewayById', className: Payments::class)]
     private PaymentGateway $gateway;
     private ?string $reference = null;
     private ?string $currency = null;
@@ -20,7 +22,7 @@ class Payment
     #[Filter('json_decode')]
     private array $responseData = [];
     private int $amount;
-    #[FieldName('status_id')]
+    #[FieldName('status_id'), Locator(methodName: 'getStatusById', className: Payments::class)]
     private PaymentStatus $status;
     private \DateTimeImmutable $dateCreated;
     private \DateTimeImmutable $dateUpdated;
