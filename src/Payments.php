@@ -89,7 +89,7 @@ class Payments
         return $payment;
     }
 
-    public function createMandate(PaymentGateway $gateway, array $requestData = []): PaymentMandate
+    public function createMandate(PaymentGateway $gateway, string $currency = 'GBP', array $requestData = []): PaymentMandate
     {
         $pendingStatus = $this->getMandateStatusById(self::MANDATE_STATUS_PENDING);
         if ($pendingStatus === null) {
@@ -99,6 +99,7 @@ class Payments
         $mandate->setPaymentGateway($gateway);
         $mandate->setData($requestData);
         $mandate->setStatus($pendingStatus);
+        $mandate->setCurrency($currency);
 
         $this->saveMandate($mandate);
         $this->getProviderController($gateway)->processMandate($mandate);
