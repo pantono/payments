@@ -63,6 +63,7 @@ class Stripe extends AbstractProvider
             'return_url' => $returnUrl
         ]);
         $mandate->setDataValue('session_response', $response);
+        $mandate->setReference($response->setup_intent);
         $this->getPayments()->saveMandate($mandate);
     }
 
