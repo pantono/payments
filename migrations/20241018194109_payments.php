@@ -56,7 +56,7 @@ final class Payments extends AbstractMigration
             ])->update();
 
         $this->table('payment_mandate')
-            ->addColumn('gateway_id', 'integer')
+            ->addColumn('gateway_id', 'integer', ['signed' => false])
             ->addColumn('reference', 'string', ['null' => true])
             ->addColumn('active', 'boolean')
             ->addColumn('start_date', 'date', ['null' => true])
@@ -66,8 +66,8 @@ final class Payments extends AbstractMigration
             ->create();
 
         $this->table('payment')
-            ->addColumn('gateway_id', 'integer')
-            ->addColumn('mandate_id', 'integer', ['null' => true])
+            ->addColumn('gateway_id', 'integer', ['signed' => false])
+            ->addColumn('mandate_id', 'integer', ['null' => true, 'signed' => false])
             ->addColumn('reference', 'string', ['null' => true])
             ->addColumn('currency', 'string', ['null' => true])
             ->addColumn('amount', 'integer')
@@ -83,11 +83,13 @@ final class Payments extends AbstractMigration
             ->create();
 
         $this->table('payment_history')
-            ->addColumn('payment_id', 'integer')
+            ->addColumn('payment_id', 'integer', ['signed' => false])
             ->addColumn('date', 'datetime')
-            ->addColumn('status_id', 'integer')
+            ->addColumn('status_id', 'integer', ['signed' => false])
             ->addColumn('entry', 'text')
             ->addColumn('data', 'json')
+            ->addForeignKey('payment_id', 'payment', 'id')
+            ->addForeignKey('status_id', 'payment_status', 'id')
             ->create();
     }
 
