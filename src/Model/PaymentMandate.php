@@ -6,9 +6,12 @@ use Pantono\Contracts\Attributes\FieldName;
 use Pantono\Contracts\Attributes\Filter;
 use Pantono\Contracts\Attributes\Locator;
 use Pantono\Payments\Payments;
+use Pantono\Database\Traits\SavableModel;
 
 class PaymentMandate
 {
+    use SavableModel;
+
     private ?int $id = null;
     #[FieldName('payment_gateway_id'), Locator(methodName: 'getGatewayById', className: Payments::class)]
     private PaymentGateway $paymentGateway;
