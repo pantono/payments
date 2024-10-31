@@ -71,7 +71,7 @@ final class Payments extends AbstractMigration
             ->addColumn('reference', 'string', ['null' => true])
             ->addColumn('currency', 'string', ['null' => true])
             ->addColumn('amount', 'integer')
-            ->addColumn('status_id', 'integer')
+            ->addColumn('status_id', 'integer', ['signed' => false])
             ->addColumn('request_data', 'json')
             ->addColumn('response_data', 'json')
             ->addColumn('date_created', 'datetime')
