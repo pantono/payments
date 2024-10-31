@@ -31,7 +31,7 @@ class ProcessStripeMandate implements EventSubscriberInterface
             $controller = $this->getControllerFromWebhook($event->getWebhook());
 
             $intentId = $event->getWebhook()->getDataValue('id');
-            $mandate = $controller->getMandateBySetupIntentId($intentId);
+            $mandate = $this->payments->getMandateByReference($intentId);
             if (!$mandate) {
                 throw new \RuntimeException('Cannot find mandate ' . $intentId);
             }

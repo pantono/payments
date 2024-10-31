@@ -67,4 +67,9 @@ class PaymentsRepository extends MysqlRepository
     {
         return $this->selectRowsByValues('payment_gateway', ['provider_id' => $id]);
     }
+
+    public function getPaymentMandateByReference(string $reference): ?array
+    {
+        return $this->selectSingleRow('payment_mandate', 'reference', $reference);
+    }
 }

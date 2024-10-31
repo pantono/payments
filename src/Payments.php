@@ -75,6 +75,11 @@ class Payments
         return $this->hydrator->hydrate(PaymentMandateStatus::class, $this->repository->getMandateStatusById($id));
     }
 
+    public function getMandateByReference(string $reference)
+    {
+        return $this->hydrator->hydrate(PaymentMandate::class, $this->repository->getPaymentMandateByReference($reference));
+    }
+
     /**
      * @return PaymentGateway[]
      */
