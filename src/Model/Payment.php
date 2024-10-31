@@ -13,7 +13,7 @@ class Payment
     use SavableModel;
 
     private ?int $id = null;
-    #[FieldName('gateway_id'), Locator(methodName: 'getGatewayById', className: Payments::class)]
+    #[FieldName('gateway_id'), Locator(methodName: 'getPaymentGatewayById', className: Payments::class)]
     private PaymentGateway $gateway;
     private ?string $reference = null;
     private ?string $currency = null;
