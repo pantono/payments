@@ -113,7 +113,7 @@ class Payments
         /**
          * @var AbstractProvider $controller
          */
-        $controller = new $controllerName;
+        $controller = new $controllerName($gateway);
         $controller->setPayments($this);
         return $controller;
     }
