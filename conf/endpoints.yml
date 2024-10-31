@@ -1,0 +1,8 @@
+stripe_payment_callback:
+  route: /payments/stripe/setup-callback
+  controller: Payments\Endpoint\StripeSetupCallback
+  method: POST
+stripe_webhook:
+  route: /payments/stripe/webhook
+  controller: Payments\Endpoint\StripeWebhook
+  method: POST

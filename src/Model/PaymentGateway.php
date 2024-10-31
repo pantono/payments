@@ -55,4 +55,10 @@ class PaymentGateway
     {
         $this->settings = $settings;
     }
+
+    public function getSetting(string $name): mixed
+    {
+        $settings = $this->getSettings();
+        return $settings[$name] ?? null;
+    }
 }

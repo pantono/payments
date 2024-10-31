@@ -7,25 +7,19 @@ use Pantono\Payments\Payments;
 use Pantono\Payments\Model\PaymentGateway;
 use Pantono\Payments\Model\PaymentMandate;
 use Pantono\Payments\Exception\GatewayDoesNotSupportMandates;
+use Pantono\Config\Config;
 
 abstract class AbstractProvider
 {
     private Payments $payments;
     private PaymentGateway $gateway;
+    private Config $config;
 
-    public function __construct(PaymentGateway $gateway)
+    public function __construct(PaymentGateway $gateway, Payments $payments, Config $config)
     {
         $this->gateway = $gateway;
-    }
-
-    public function getPayments(): Payments
-    {
-        return $this->payments;
-    }
-
-    public function setPayments(Payments $payments): void
-    {
         $this->payments = $payments;
+        $this->config = $config;
     }
 
     abstract public function supportsRecurring(): bool;
@@ -44,8 +38,13 @@ abstract class AbstractProvider
         return $this->gateway;
     }
 
-    public function setGateway(PaymentGateway $gateway): void
+    public function getPayments(): Payments
     {
-        $this->gateway = $gateway;
+        return $this->payments;
+    }
+
+    public function getConfig(): Config
+    {
+        return $this->config;
     }
 }

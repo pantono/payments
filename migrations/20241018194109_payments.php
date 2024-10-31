@@ -61,6 +61,7 @@ final class Payments extends AbstractMigration
             ->addColumn('status_id', 'integer', ['signed' => false])
             ->addColumn('start_date', 'date', ['null' => true])
             ->addColumn('end_date', 'date', ['null' => true])
+            ->addColumn('currency', 'string')
             ->addColumn('data', 'json')
             ->addForeignKey('gateway_id', 'payment_gateway', 'id')
             ->addForeignKey('status_id', 'payment_mandate_status', 'id')

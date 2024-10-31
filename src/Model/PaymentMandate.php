@@ -20,6 +20,7 @@ class PaymentMandate
     private ?string $reference = null;
     private ?\DateTimeImmutable $startDate = null;
     private ?\DateTimeImmutable $endDate = null;
+    private string $currency;
     #[Filter('json_decode')]
     private array $data = [];
 
@@ -83,6 +84,22 @@ class PaymentMandate
         $this->data = $data;
     }
 
+    public function getDataValue(string $name): mixed
+    {
+        $data = $this->getData();
+        return $data[$name] ?? null;
+    }
+
+    public function setDataValue(string $name, mixed $dataValue): void
+    {
+        $data = $this->getData();
+        if (!$data) {
+            $data = [];
+        }
+        $data[$name] = $dataValue;
+        $this->data = $data;
+    }
+
     public function getStatus(): PaymentMandateStatus
     {
         return $this->status;
@@ -91,5 +108,15 @@ class PaymentMandate
     public function setStatus(PaymentMandateStatus $status): void
     {
         $this->status = $status;
+    }
+
+    public function getCurrency(): string
+    {
+        return $this->currency;
+    }
+
+    public function setCurrency(string $currency): void
+    {
+        $this->currency = $currency;
     }
 }
