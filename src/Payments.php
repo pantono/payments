@@ -16,6 +16,7 @@ use Pantono\Payments\Model\PaymentMandate;
 use Pantono\Payments\Event\PreMandateSaveSaveEvent;
 use Pantono\Payments\Event\PostMandateSaveSaveEvent;
 use Pantono\Payments\Model\PaymentMandateStatus;
+use Pantono\Config\Config;
 
 class Payments
 {
@@ -29,12 +30,14 @@ class Payments
     public const MANDATE_STATUS_ACTIVE = 2;
     public const MANDATE_STATUS_CANCELLED = 3;
     public const MANDATE_STATUS_EXPIRED = 4;
+    private Config $config;
 
-    public function __construct(PaymentsRepository $repository, Hydrator $hydrator, EventDispatcher $dispatcher)
+    public function __construct(PaymentsRepository $repository, Hydrator $hydrator, EventDispatcher $dispatcher, Config $config)
     {
         $this->repository = $repository;
         $this->hydrator = $hydrator;
         $this->dispatcher = $dispatcher;
+        $this->config = $config;
     }
 
     public function getPaymentById(int $id): ?Payment
@@ -141,8 +144,7 @@ class Payments
         /**
          * @var AbstractProvider $controller
          */
-        $controller = new $controllerName($gateway);
-        $controller->setPayments($this);
+        $controller = new $controllerName($gateway, $this, $this->config);
         return $controller;
     }
 }
