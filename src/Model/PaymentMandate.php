@@ -15,7 +15,7 @@ class PaymentMandate
     private ?int $id = null;
     #[FieldName('payment_gateway_id'), Locator(methodName: 'getGatewayById', className: Payments::class)]
     private PaymentGateway $paymentGateway;
-    #[FieldName('payment_gateway_id'), Locator(methodName: 'getGatewayById', className: Payments::class)]
+    #[FieldName('status_id'), Locator(methodName: 'getMandateStatusById', className: Payments::class)]
     private PaymentMandateStatus $status;
     private ?string $reference = null;
     private ?\DateTimeImmutable $startDate = null;
