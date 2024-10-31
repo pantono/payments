@@ -6,9 +6,21 @@ use Pantono\Payments\Model\Payment;
 use Pantono\Payments\Model\PaymentMandate;
 use Stripe\StripeClient;
 use Pantono\Utilities\ApplicationHelper;
+use Pantono\Payments\Repository\StripeRepository;
+use Pantono\Payments\Payments;
+use Pantono\Payments\Model\StripeWebhook;
+use Pantono\Core\Application\WebApplication;
 
 class Stripe extends AbstractProvider
 {
+    public const PROVIDER_ID = 1;
+    private StripeRepository $repository;
+
+    public function __construct(StripeRepository $repository)
+    {
+        $this->repository = $repository;
+    }
+
     private ?StripeClient $client = null;
 
     public function supportsRecurring(): bool
@@ -55,5 +67,14 @@ class Stripe extends AbstractProvider
             ]);
         }
         return $this->client;
+    }
+
+    public function ingestWebhook(array $data): StripeWebhook
+    {
+        $webhook = new StripeWebhook();
+        $webhook->setData($data);
+        $webhook->setDate(new \DateTimeImmutable());
+        $this->repository->saveWebhook($webhook);
+        return $webhook;
     }
 }

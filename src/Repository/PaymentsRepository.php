@@ -62,4 +62,9 @@ class PaymentsRepository extends MysqlRepository
             $gateway->setId($id);
         }
     }
+
+    public function getGatewaysByProvider(int $id): array
+    {
+        return $this->selectRowsByValues('payment_gateway', ['provider_id' => $id]);
+    }
 }

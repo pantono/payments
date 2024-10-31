@@ -19,6 +19,7 @@ use Pantono\Payments\Model\PaymentMandateStatus;
 use Pantono\Config\Config;
 use Pantono\Payments\Event\PreGatewaySaveEvent;
 use Pantono\Payments\Event\PostGatewaySaveEvent;
+use Pantono\Container\Service\Locator;
 
 class Payments
 {
@@ -33,13 +34,15 @@ class Payments
     public const MANDATE_STATUS_CANCELLED = 3;
     public const MANDATE_STATUS_EXPIRED = 4;
     private Config $config;
+    private Locator $locator;
 
-    public function __construct(PaymentsRepository $repository, Hydrator $hydrator, EventDispatcher $dispatcher, Config $config)
+    public function __construct(PaymentsRepository $repository, Hydrator $hydrator, EventDispatcher $dispatcher, Config $config, Locator $locator)
     {
         $this->repository = $repository;
         $this->hydrator = $hydrator;
         $this->dispatcher = $dispatcher;
         $this->config = $config;
+        $this->locator = $locator;
     }
 
     public function getPaymentById(int $id): ?Payment
@@ -70,6 +73,14 @@ class Payments
     public function getMandateStatusById(int $id): ?PaymentMandateStatus
     {
         return $this->hydrator->hydrate(PaymentMandateStatus::class, $this->repository->getMandateStatusById($id));
+    }
+
+    /**
+     * @return PaymentGateway[]
+     */
+    public function getGatewaysByProviderId(int $id): array
+    {
+        return $this->hydrator->hydrateSet(PaymentGateway::class, $this->repository->getGatewaysByProvider($id));
     }
 
     public function createPayment(PaymentGateway $gateway, int $amountInPence, array $requestData = []): Payment
@@ -154,16 +165,18 @@ class Payments
         $this->dispatcher->dispatch($event);
     }
 
-    private function getProviderController(PaymentGateway $gateway): AbstractProvider
+    public function getProviderController(PaymentGateway $gateway): AbstractProvider
     {
         if (!class_exists($gateway->getProvider()->getController())) {
             throw new \RuntimeException('Controller for provider does not exist');
         }
-        $controllerName = $gateway->getProvider()->getController();
         /**
          * @var AbstractProvider $controller
          */
-        $controller = new $controllerName($gateway, $this, $this->config);
+        $controller = $this->locator->getClassAutoWire($gateway->getProvider()->getController());
+        $controller->setPayments($this);
+        $controller->setConfig($this->config);
+        $controller->setGateway($gateway);
         return $controller;
     }
 }

@@ -11,16 +11,9 @@ use Pantono\Config\Config;
 
 abstract class AbstractProvider
 {
-    private Payments $payments;
+    protected Payments $payments;
     private PaymentGateway $gateway;
     private Config $config;
-
-    public function __construct(PaymentGateway $gateway, Payments $payments, Config $config)
-    {
-        $this->gateway = $gateway;
-        $this->payments = $payments;
-        $this->config = $config;
-    }
 
     abstract public function supportsRecurring(): bool;
 
@@ -46,5 +39,20 @@ abstract class AbstractProvider
     public function getConfig(): Config
     {
         return $this->config;
+    }
+
+    public function setPayments(Payments $payments): void
+    {
+        $this->payments = $payments;
+    }
+
+    public function setGateway(PaymentGateway $gateway): void
+    {
+        $this->gateway = $gateway;
+    }
+
+    public function setConfig(Config $config): void
+    {
+        $this->config = $config;
     }
 }
