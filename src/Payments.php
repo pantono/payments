@@ -1,6 +1,6 @@
 <?php
 
-namespace src;
+namespace Pantono\Payments;
 
 use Pantono\Payments\Repository\PaymentsRepository;
 use Pantono\Hydrator\Hydrator;
