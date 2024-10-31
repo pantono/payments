@@ -40,7 +40,7 @@ class Payments
         return $this->hydrator->hydrate(PaymentGateway::class, $this->repository->getPaymentGatewayById($id));
     }
 
-    public function getPaymentProviderById(int $id): ?PaymentProvider
+    public function getProviderById(int $id): ?PaymentProvider
     {
         return $this->hydrator->hydrate(PaymentProvider::class, $this->repository->getPaymentProviderById($id));
     }
