@@ -41,6 +41,20 @@ class ProcessStripeMandate implements EventSubscriberInterface
             }
             $controller->completeMandate($mandate, $data);
         }
+        if ($event->getWebhook()->getType() === 'checkout.session.completed') {
+            $controller = $this->getControllerFromWebhook($event->getWebhook());
+
+            $intentId = $event->getWebhook()->getDataValue('id');
+            $mandate = $this->payments->getMandateByReference($intentId);
+            if (!$mandate) {
+                throw new \RuntimeException('Cannot find mandate ' . $intentId);
+            }
+            $data = $event->getWebhook()->getObjectData();
+            if (!$data) {
+                throw new \RuntimeException('Cannot find object data in response');
+            }
+            $controller->completeMandate($mandate, $data);
+        }
     }
 
     private function getControllerFromWebhook(StripeWebhook $webhook): Stripe

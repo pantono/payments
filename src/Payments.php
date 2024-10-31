@@ -50,6 +50,11 @@ class Payments
         return $this->hydrator->hydrate(Payment::class, $this->repository->getPaymentById($id));
     }
 
+    public function getPaymentByReference(string $reference): ?Payment
+    {
+        return $this->hydrator->hydrate(Payment::class, $this->repository->getPaymentByReference($reference));
+    }
+
     public function getPaymentGatewayById(int $id): ?PaymentGateway
     {
         return $this->hydrator->hydrate(PaymentGateway::class, $this->repository->getPaymentGatewayById($id));
@@ -75,7 +80,7 @@ class Payments
         return $this->hydrator->hydrate(PaymentMandateStatus::class, $this->repository->getMandateStatusById($id));
     }
 
-    public function getMandateByReference(string $reference)
+    public function getMandateByReference(string $reference): ?PaymentMandate
     {
         return $this->hydrator->hydrate(PaymentMandate::class, $this->repository->getPaymentMandateByReference($reference));
     }
