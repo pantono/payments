@@ -3,6 +3,6 @@ stripe_payment_callback:
   controller: Pantono\Payments\Endpoint\StripeSetupCallback
   method: POST
 stripe_webhook:
-  route: /payments/stripe/webhook
+  route: /payments/stripe/webhook/{gateway_id}
   controller: Pantono\Payments\Endpoint\StripeWebhook
   method: POST

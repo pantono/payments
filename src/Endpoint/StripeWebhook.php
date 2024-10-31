@@ -20,11 +20,11 @@ class StripeWebhook extends AbstractEndpoint
 
     public function processRequest(ParameterBag $parameters): array|ResourceAbstract|Response
     {
-        $gateways = $this->payments->getGatewaysByProviderId(Stripe::PROVIDER_ID);
-        if (empty($gateways)) {
-            throw new \RuntimeException('No providers setup for stripe webhooks');
+        $gatewayId = $this->getRequest()->get('gateway_id');
+        $gateway = $this->payments->getPaymentGatewayById($gatewayId);
+        if ($gateway === null) {
+            throw new \RuntimeException('Gateway does not exist');
         }
-        $gateway = $gateways[0];
         /**
          * @var Stripe $provider
          */
