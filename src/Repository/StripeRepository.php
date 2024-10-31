@@ -14,4 +14,11 @@ class StripeRepository extends MysqlRepository
             $webhook->setId($id);
         }
     }
+
+    public function getMandateBySetupIntentId(string $setupIntentId): ?array
+    {
+        $sql = "SELECT * from payment_madate where data->>'$.session_response.setup_intent' = :setupIntentId";
+        $row = $this->getDb()->fetchRow($sql, ['setupIntent' => $setupIntentId]);
+        return !empty($row) ? $row : null;
+    }
 }

@@ -1,0 +1,2 @@
+process_stripe_mandate:
+  class: Pantono\Payments\Events\ProcessStripeMandate

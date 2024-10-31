@@ -10,15 +10,22 @@ use Pantono\Payments\Repository\StripeRepository;
 use Pantono\Payments\Payments;
 use Pantono\Payments\Model\StripeWebhook;
 use Pantono\Core\Application\WebApplication;
+use Symfony\Component\EventDispatcher\EventDispatcher;
+use Pantono\Payments\Event\StripeWebhookEvent;
+use Pantono\Hydrator\Hydrator;
 
 class Stripe extends AbstractProvider
 {
     public const PROVIDER_ID = 1;
     private StripeRepository $repository;
+    private EventDispatcher $dispatcher;
+    private Hydrator $hydrator;
 
-    public function __construct(StripeRepository $repository)
+    public function __construct(StripeRepository $repository, EventDispatcher $dispatcher, Hydrator $hydrator)
     {
         $this->repository = $repository;
+        $this->dispatcher = $dispatcher;
+        $this->hydrator = $hydrator;
     }
 
     private ?StripeClient $client = null;
@@ -69,6 +76,22 @@ class Stripe extends AbstractProvider
         return $this->client;
     }
 
+    public function getMandateBySetupIntentId(string $setupIntentId): ?PaymentMandate
+    {
+        return $this->hydrator->hydrate(PaymentMandate::class, $this->repository->getMandateBySetupIntentId($setupIntentId));
+    }
+
+    public function completeMandate(PaymentMandate $mandate, array $data): void
+    {
+        $mandate->setDataValue('complete_response', $data);
+        $status = $this->payments->getMandateStatusById(Payments::MANDATE_STATUS_ACTIVE);
+        if ($status === null) {
+            throw new \RuntimeException('Mandate active status not set');
+        }
+        $mandate->setStatus($status);
+        $this->payments->saveMandate($mandate);
+    }
+
     public function ingestWebhook(string $type, array $data): StripeWebhook
     {
         $webhook = new StripeWebhook();
@@ -76,6 +99,10 @@ class Stripe extends AbstractProvider
         $webhook->setData($data);
         $webhook->setType($type);
         $webhook->setDate(new \DateTimeImmutable());
+        $this->repository->saveWebhook($webhook);
+        $event = new StripeWebhookEvent();
+        $event->setWebhook($webhook);
+        $this->dispatcher->dispatch($event);
         $this->repository->saveWebhook($webhook);
         return $webhook;
     }
