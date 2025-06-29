@@ -6,18 +6,20 @@ use Phinx\Migration\AbstractMigration;
 
 final class Payments extends AbstractMigration
 {
-    public function up(): void
+    public function change(): void
     {
         $this->table('payment_provider')
             ->addColumn('name', 'string')
             ->addColumn('controller', 'string')
             ->create();
-        $this->table('payment_provider')
-            ->insert([
-                ['id' => 1, 'name' => 'Stripe', 'controller' => 'Pantono\Payments\Provider\Stripe'],
-                ['id' => 2, 'name' => 'Braintree', 'controller' => 'Pantono\Payments\Provider\Braintree'],
-                ['id' => 3, 'name' => 'Go Cardless', 'controller' => 'Pantono\Payments\Provider\GoCardless'],
-            ])->update();
+        if ($this->isMigratingUp()) {
+            $this->table('payment_provider')
+                ->insert([
+                    ['id' => 1, 'name' => 'Stripe', 'controller' => 'Pantono\Payments\Provider\Stripe'],
+                    ['id' => 2, 'name' => 'Braintree', 'controller' => 'Pantono\Payments\Provider\Braintree'],
+                    ['id' => 3, 'name' => 'Go Cardless', 'controller' => 'Pantono\Payments\Provider\GoCardless'],
+                ])->saveData();
+        }
 
         $this->table('payment_gateway')
             ->addColumn('name', 'string')
@@ -33,12 +35,14 @@ final class Payments extends AbstractMigration
             ->addColumn('failed', 'boolean')
             ->create();
 
-        $this->table('payment_status')
-            ->insert([
-                ['id' => 1, 'name' => 'Pending', 'completed' => 0, 'pending' => 1, 'failed' => 0],
-                ['id' => 2, 'name' => 'Completed', 'completed' => 1, 'pending' => 0, 'failed' => 0],
-                ['id' => 3, 'name' => 'Failed', 'completed' => 0, 'pending' => 0, 'failed' => 1],
-            ])->update();
+        if ($this->isMigratingUp()) {
+            $this->table('payment_status')
+                ->insert([
+                    ['id' => 1, 'name' => 'Pending', 'completed' => 0, 'pending' => 1, 'failed' => 0],
+                    ['id' => 2, 'name' => 'Completed', 'completed' => 1, 'pending' => 0, 'failed' => 0],
+                    ['id' => 3, 'name' => 'Failed', 'completed' => 0, 'pending' => 0, 'failed' => 1],
+                ])->saveData();
+        }
 
         $this->table('payment_mandate_status')
             ->addColumn('name', 'string')
@@ -47,13 +51,15 @@ final class Payments extends AbstractMigration
             ->addColumn('expired', 'boolean')
             ->create();
 
-        $this->table('payment_mandate_status')
-            ->insert([
-                ['id' => 1, 'name' => 'Pending', 'active' => 0, 'cancelled' => 0, 'expired' => 0],
-                ['id' => 2, 'name' => 'Active', 'active' => 1, 'cancelled' => 0, 'expired' => 0],
-                ['id' => 3, 'name' => 'Cancelled', 'active' => 0, 'cancelled' => 1, 'expired' => 0],
-                ['id' => 4, 'name' => 'Cancelled', 'active' => 0, 'cancelled' => 0, 'expired' => 1],
-            ])->update();
+        if ($this->isMigratingUp()) {
+            $this->table('payment_mandate_status')
+                ->insert([
+                    ['id' => 1, 'name' => 'Pending', 'active' => 0, 'cancelled' => 0, 'expired' => 0],
+                    ['id' => 2, 'name' => 'Active', 'active' => 1, 'cancelled' => 0, 'expired' => 0],
+                    ['id' => 3, 'name' => 'Cancelled', 'active' => 0, 'cancelled' => 1, 'expired' => 0],
+                    ['id' => 4, 'name' => 'Cancelled', 'active' => 0, 'cancelled' => 0, 'expired' => 1],
+                ])->saveData();
+        }
 
         $this->table('payment_mandate')
             ->addColumn('gateway_id', 'integer', ['signed' => false])
@@ -93,23 +99,5 @@ final class Payments extends AbstractMigration
             ->addForeignKey('payment_id', 'payment', 'id')
             ->addForeignKey('status_id', 'payment_status', 'id')
             ->create();
-    }
-
-    public function down(): void
-    {
-        $this->table('payment_history')
-            ->drop()->update();
-        $this->table('payment_mandate')
-            ->drop()->update();
-        $this->table('payment_mandate_status')
-            ->drop()->update();
-        $this->table('payment')
-            ->drop()->update();
-        $this->table('payment_status')
-            ->drop()->update();
-        $this->table('payment_gateway')
-            ->drop()->update();
-        $this->table('payment_provider')
-            ->drop()->update();
     }
 }
