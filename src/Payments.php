@@ -20,6 +20,7 @@ use Pantono\Config\Config;
 use Pantono\Payments\Event\PreGatewaySaveEvent;
 use Pantono\Payments\Event\PostGatewaySaveEvent;
 use Pantono\Contracts\Locator\LocatorInterface;
+use Pantono\Payments\Model\PaymentWebhook;
 
 class Payments
 {
@@ -190,5 +191,10 @@ class Payments
         $controller->setConfig($this->config);
         $controller->setGateway($gateway);
         return $controller;
+    }
+
+    public function saveWebhook(PaymentWebhook $webhook):void
+    {
+        $this->repository->saveWebhook($webhook);
     }
 }

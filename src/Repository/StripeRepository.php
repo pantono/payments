@@ -3,18 +3,10 @@
 namespace Pantono\Payments\Repository;
 
 use Pantono\Database\Repository\MysqlRepository;
-use Pantono\Payments\Model\StripeWebhook;
+use Pantono\Payments\Model\PaymentWebhook;
 
 class StripeRepository extends MysqlRepository
 {
-    public function saveWebhook(StripeWebhook $webhook): void
-    {
-        $id = $this->insertOrUpdateCheck('payments_stripe_webhook', 'id', $webhook->getId(), $webhook->getAllData());
-        if ($id) {
-            $webhook->setId($id);
-        }
-    }
-
     public function getMandateBySetupIntentId(string $setupIntentId): ?array
     {
         $sql = "SELECT * from payment_mandate where data->>'$.session_response.setup_intent' = :id";

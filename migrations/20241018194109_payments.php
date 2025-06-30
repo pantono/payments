@@ -100,7 +100,7 @@ final class Payments extends AbstractMigration
             ->addForeignKey('status_id', 'payment_status', 'id')
             ->create();
 
-        $this->table('payments_webhook')
+        $this->table('payment_webhook')
             ->addColumn('gateway_id', 'integer', ['signed' => false])
             ->addColumn('date', 'datetime')
             ->addColumn('type', 'string')

@@ -3,9 +3,9 @@
 namespace Pantono\Payments\Events;
 
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
-use Pantono\Payments\Event\StripeWebhookEvent;
+use Pantono\Payments\Event\PaymentWebhookEvent;
 use Pantono\Payments\Payments;
-use Pantono\Payments\Model\StripeWebhook;
+use Pantono\Payments\Model\PaymentWebhook;
 use Pantono\Payments\Provider\Stripe;
 use Pantono\Payments\Provider\AbstractProvider;
 
@@ -21,11 +21,11 @@ class ProcessStripeMandate implements EventSubscriberInterface
     public static function getSubscribedEvents(): array
     {
         return [
-            StripeWebhookEvent::class => ['handleStripeWebhook', 255]
+            PaymentWebhookEvent::class => ['handleStripeWebhook', 255]
         ];
     }
 
-    public function handleStripeWebhook(StripeWebhookEvent $event): void
+    public function handleStripeWebhook(PaymentWebhookEvent $event): void
     {
         if ($event->getWebhook()->getType() === 'setup_intent.succeeded') {
             $controller = $this->getControllerFromWebhook($event->getWebhook());
@@ -57,7 +57,7 @@ class ProcessStripeMandate implements EventSubscriberInterface
         }
     }
 
-    private function getControllerFromWebhook(StripeWebhook $webhook): Stripe
+    private function getControllerFromWebhook(PaymentWebhook $webhook): Stripe
     {
         $controller = $this->payments->getProviderController($webhook->getGateway());
         if ($controller instanceof Stripe) {

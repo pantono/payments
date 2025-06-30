@@ -6,6 +6,7 @@ use Pantono\Database\Repository\MysqlRepository;
 use Pantono\Payments\Model\Payment;
 use Pantono\Payments\Model\PaymentMandate;
 use Pantono\Payments\Model\PaymentGateway;
+use Pantono\Payments\Model\PaymentWebhook;
 
 class PaymentsRepository extends MysqlRepository
 {
@@ -76,5 +77,13 @@ class PaymentsRepository extends MysqlRepository
     public function getPaymentMandateByReference(string $reference): ?array
     {
         return $this->selectSingleRowLock('payment_mandate', 'reference', $reference);
+    }
+
+    public function saveWebhook(PaymentWebhook $webhook): void
+    {
+        $id = $this->insertOrUpdate('payment_webhook', 'id', $webhook->getId(), $webhook->getAllData());
+        if ($id) {
+            $webhook->setId($id);
+        }
     }
 }

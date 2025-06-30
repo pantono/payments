@@ -8,7 +8,7 @@ use Pantono\Contracts\Attributes\Locator;
 use Pantono\Payments\Payments;
 use Pantono\Contracts\Attributes\FieldName;
 
-class StripeWebhook
+class PaymentWebhook
 {
     use SavableModel;
 

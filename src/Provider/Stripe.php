@@ -8,10 +8,10 @@ use Stripe\StripeClient;
 use Pantono\Utilities\ApplicationHelper;
 use Pantono\Payments\Repository\StripeRepository;
 use Pantono\Payments\Payments;
-use Pantono\Payments\Model\StripeWebhook;
+use Pantono\Payments\Model\PaymentWebhook;
 use Pantono\Core\Application\WebApplication;
 use Symfony\Component\EventDispatcher\EventDispatcher;
-use Pantono\Payments\Event\StripeWebhookEvent;
+use Pantono\Payments\Event\PaymentWebhookEvent;
 use Pantono\Hydrator\Hydrator;
 use Stripe\PaymentIntent;
 
@@ -110,18 +110,18 @@ class Stripe extends AbstractProvider
         $this->payments->saveMandate($mandate);
     }
 
-    public function ingestWebhook(string $type, array $data): StripeWebhook
+    public function ingestWebhook(string $type, array $data): PaymentWebhook
     {
-        $webhook = new StripeWebhook();
+        $webhook = new PaymentWebhook();
         $webhook->setGateway($this->getGateway());
         $webhook->setData($data);
         $webhook->setType($type);
         $webhook->setDate(new \DateTimeImmutable());
-        $this->repository->saveWebhook($webhook);
-        $event = new StripeWebhookEvent();
+        $this->payments->saveWebhook($webhook);
+        $event = new PaymentWebhookEvent();
         $event->setWebhook($webhook);
         $this->dispatcher->dispatch($event);
-        $this->repository->saveWebhook($webhook);
+        $this->payments->saveWebhook($webhook);
         return $webhook;
     }
 
