@@ -8,6 +8,7 @@ use Pantono\Payments\Model\PaymentGateway;
 use Pantono\Payments\Model\PaymentMandate;
 use Pantono\Payments\Exception\GatewayDoesNotSupportMandates;
 use Pantono\Config\Config;
+use Symfony\Component\HttpFoundation\Request;
 
 abstract class AbstractProvider
 {

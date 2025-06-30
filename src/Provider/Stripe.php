@@ -14,6 +14,7 @@ use Symfony\Component\EventDispatcher\EventDispatcher;
 use Pantono\Payments\Event\PaymentWebhookEvent;
 use Pantono\Hydrator\Hydrator;
 use Stripe\PaymentIntent;
+use http\Env\Request;
 
 class Stripe extends AbstractProvider
 {
@@ -109,22 +110,6 @@ class Stripe extends AbstractProvider
         $mandate->setStatus($status);
         $this->payments->saveMandate($mandate);
     }
-
-    public function ingestWebhook(string $type, array $data): PaymentWebhook
-    {
-        $webhook = new PaymentWebhook();
-        $webhook->setGateway($this->getGateway());
-        $webhook->setData($data);
-        $webhook->setType($type);
-        $webhook->setDate(new \DateTimeImmutable());
-        $this->payments->saveWebhook($webhook);
-        $event = new PaymentWebhookEvent();
-        $event->setWebhook($webhook);
-        $this->dispatcher->dispatch($event);
-        $this->payments->saveWebhook($webhook);
-        return $webhook;
-    }
-
 
     private function getClient(): StripeClient
     {

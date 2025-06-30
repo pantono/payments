@@ -21,6 +21,8 @@ use Pantono\Payments\Event\PreGatewaySaveEvent;
 use Pantono\Payments\Event\PostGatewaySaveEvent;
 use Pantono\Contracts\Locator\LocatorInterface;
 use Pantono\Payments\Model\PaymentWebhook;
+use Symfony\Component\HttpFoundation\Request;
+use Pantono\Payments\Event\PaymentWebhookEvent;
 
 class Payments
 {
@@ -108,8 +110,8 @@ class Payments
         $payment->setAmount($amountInPence);
         $payment->setRequestData($requestData);
         $payment->setStatus($pendingStatus);
-        $this->savePayment($payment);
         $this->getProviderController($gateway)->initiate($payment);
+        $this->savePayment($payment);
         return $payment;
     }
 
@@ -193,8 +195,24 @@ class Payments
         return $controller;
     }
 
-    public function saveWebhook(PaymentWebhook $webhook):void
+    public function saveWebhook(PaymentWebhook $webhook): void
     {
         $this->repository->saveWebhook($webhook);
+    }
+
+    public function ingestWebhook(PaymentGateway $paymentGateway, Request $request): PaymentWebhook
+    {
+        $webhook = new PaymentWebhook();
+        $webhook->setData($request->request->all());
+        $webhook->setDate(new \DateTimeImmutable());
+        $webhook->setHeaders($request->headers->all());
+        $webhook->setGateway($paymentGateway);
+        $webhook->setProcessed(false);
+        $this->saveWebhook($webhook);
+        $event = new PaymentWebhookEvent();
+        $event->setWebhook($webhook);
+        $this->dispatcher->dispatch($event);
+        $this->saveWebhook($webhook);
+        return $webhook;
     }
 }

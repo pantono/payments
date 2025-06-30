@@ -27,42 +27,44 @@ class ProcessStripeMandate implements EventSubscriberInterface
 
     public function handleStripeWebhook(PaymentWebhookEvent $event): void
     {
-        if ($event->getWebhook()->getType() === 'setup_intent.succeeded') {
-            $controller = $this->getControllerFromWebhook($event->getWebhook());
+        if ($event->getWebhook()->getGateway()->getProvider()->getController() === Stripe::class) {
+            if ($event->getWebhook()->getType() === 'setup_intent.succeeded') {
+                $controller = $this->getControllerFromWebhook($event->getWebhook());
 
-            $intentId = $event->getWebhook()->getDataValue('id');
-            $mandate = $this->payments->getMandateByReference($intentId);
-            if (!$mandate) {
-                throw new \RuntimeException('Cannot find mandate ' . $intentId);
+                $intentId = $event->getWebhook()->getDataValue('id');
+                $mandate = $this->payments->getMandateByReference($intentId);
+                if (!$mandate) {
+                    throw new \RuntimeException('Cannot find mandate ' . $intentId);
+                }
+                $data = $event->getWebhook()->getObjectData();
+                if (!$data) {
+                    throw new \RuntimeException('Cannot find object data in response');
+                }
+                $controller->completeMandate($mandate, $data);
             }
-            $data = $event->getWebhook()->getObjectData();
-            if (!$data) {
-                throw new \RuntimeException('Cannot find object data in response');
-            }
-            $controller->completeMandate($mandate, $data);
-        }
-        if ($event->getWebhook()->getType() === 'checkout.session.completed') {
-            $controller = $this->getControllerFromWebhook($event->getWebhook());
+            if ($event->getWebhook()->getType() === 'checkout.session.completed') {
+                $controller = $this->getControllerFromWebhook($event->getWebhook());
 
-            $intentId = $event->getWebhook()->getDataValue('id');
-            $mandate = $this->payments->getMandateByReference($intentId);
-            if (!$mandate) {
-                throw new \RuntimeException('Cannot find mandate ' . $intentId);
+                $intentId = $event->getWebhook()->getDataValue('id');
+                $mandate = $this->payments->getMandateByReference($intentId);
+                if (!$mandate) {
+                    throw new \RuntimeException('Cannot find mandate ' . $intentId);
+                }
+                $data = $event->getWebhook()->getObjectData();
+                if (!$data) {
+                    throw new \RuntimeException('Cannot find object data in response');
+                }
+                $controller->completeMandate($mandate, $data);
             }
-            $data = $event->getWebhook()->getObjectData();
-            if (!$data) {
-                throw new \RuntimeException('Cannot find object data in response');
-            }
-            $controller->completeMandate($mandate, $data);
         }
     }
 
-    private function getControllerFromWebhook(PaymentWebhook $webhook): Stripe
+    /**
+     * @param PaymentWebhook $webhook
+     * @return Stripe
+     */
+    private function getControllerFromWebhook(PaymentWebhook $webhook): AbstractProvider
     {
-        $controller = $this->payments->getProviderController($webhook->getGateway());
-        if ($controller instanceof Stripe) {
-            return $controller;
-        }
-        throw new \RuntimeException('Payment controller is invalid type');
+        return $this->payments->getProviderController($webhook->getGateway());
     }
 }

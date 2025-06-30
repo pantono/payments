@@ -27,11 +27,7 @@ class PaymentWebhook extends AbstractEndpoint
         if ($gateway === null) {
             throw new \RuntimeException('Gateway does not exist');
         }
-        /**
-         * @var Stripe $provider
-         */
-        $provider = $this->payments->getProviderController($gateway);
-        $provider->ingestWebhook($parameters->get('type'), $parameters->all());
-        return new Item(['success' => true], new GenericArrayDecorator());
+        $webhook = $this->payments->ingestWebhook($gateway, $this->getRequest());
+        return new Item(['success' => true, 'id' => $webhook->getId()], new GenericArrayDecorator());
     }
 }

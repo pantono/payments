@@ -19,7 +19,9 @@ class PaymentWebhook
     private string $type;
     #[Filter('json_decode')]
     private array $data;
-
+    #[Filter('json_decode')]
+    private array $headers;
+    private bool $processed = false;
     public function getId(): ?int
     {
         return $this->id;
@@ -81,5 +83,30 @@ class PaymentWebhook
     {
         $webhookData = $this->getData();
         return $webhookData['data']['object'] ?? null;
+    }
+
+    public function getHeaders(): array
+    {
+        return $this->headers;
+    }
+
+    public function setHeaders(array $headers): void
+    {
+        $this->headers = $headers;
+    }
+
+    public function getHeader(string $name): mixed
+    {
+        return $this->headers[$name] ?? null;
+    }
+
+    public function isProcessed(): bool
+    {
+        return $this->processed;
+    }
+
+    public function setProcessed(bool $processed): void
+    {
+        $this->processed = $processed;
     }
 }
