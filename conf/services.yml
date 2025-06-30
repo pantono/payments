@@ -1,2 +1,8 @@
 Payments:
   class: Pantono\Payments\Payments
+  parameters:
+    - :Pantono\Payments\Repository\PaymentsRepository
+    - "@Hydrator"
+    - "@EventDispatcher"
+    - "@Config"
+    - "@ServiceLocator"
