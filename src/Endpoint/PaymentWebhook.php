@@ -8,8 +8,10 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\ParameterBag;
 use League\Fractal\Resource\ResourceAbstract;
 use Pantono\Payments\Provider\Stripe;
+use League\Fractal\Resource\Item;
+use Pantono\Core\Decorator\GenericArrayDecorator;
 
-class StripeWebhook extends AbstractEndpoint
+class PaymentWebhook extends AbstractEndpoint
 {
     private Payments $payments;
 
@@ -20,7 +22,7 @@ class StripeWebhook extends AbstractEndpoint
 
     public function processRequest(ParameterBag $parameters): array|ResourceAbstract|Response
     {
-        $gatewayId = $this->getRequest()->get('gateway_id');
+        $gatewayId = $this->getRequest()->get('id');
         $gateway = $this->payments->getPaymentGatewayById($gatewayId);
         if ($gateway === null) {
             throw new \RuntimeException('Gateway does not exist');
@@ -30,6 +32,6 @@ class StripeWebhook extends AbstractEndpoint
          */
         $provider = $this->payments->getProviderController($gateway);
         $provider->ingestWebhook($parameters->get('type'), $parameters->all());
-        return ['success' => true];
+        return new Item(['success' => true], new GenericArrayDecorator());
     }
 }
