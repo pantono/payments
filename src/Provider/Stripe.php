@@ -13,6 +13,7 @@ use Pantono\Core\Application\WebApplication;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Pantono\Payments\Event\StripeWebhookEvent;
 use Pantono\Hydrator\Hydrator;
+use Stripe\PaymentIntent;
 
 class Stripe extends AbstractProvider
 {
@@ -37,7 +38,28 @@ class Stripe extends AbstractProvider
 
     public function initiate(Payment $payment): void
     {
-        // TODO: Implement initiate() method.
+        $params = [
+            'currency' => $payment->getCurrency(),
+            'amount' => $payment->getAmount()
+        ];
+        if ($payment->getDataField('description')) {
+            $params['statement_descriptor'] = $payment->getDataField('description');
+        }
+        if ($payment->getDataField('metadata')) {
+            $params['metadata'] = $payment->getDataField('metadata');
+        }
+        $intent = $this->getClient()->paymentIntents->create($params);
+        $payment->setDataValue('payment_intent_id', $intent->id);
+        $payment->setDataValue('client_secret', $intent->client_secret);
+    }
+
+    public function lookupPaymentData(Payment $payment): ?PaymentIntent
+    {
+        $id = $payment->getDataField('payment_intent_id');
+        if ($id) {
+            return $this->getClient()->paymentIntents->retrieve($id);
+        }
+        return null;
     }
 
     public function handleResponse(array $data): void
@@ -72,16 +94,6 @@ class Stripe extends AbstractProvider
 
     }
 
-    public function getClient(): StripeClient
-    {
-        if (!$this->client) {
-            $this->client = new StripeClient([
-                'api_key' => $this->getGateway()->getSetting('key')
-            ]);
-        }
-        return $this->client;
-    }
-
     public function getMandateBySetupIntentId(string $setupIntentId): ?PaymentMandate
     {
         return $this->hydrator->hydrate(PaymentMandate::class, $this->repository->getMandateBySetupIntentId($setupIntentId));
@@ -111,5 +123,23 @@ class Stripe extends AbstractProvider
         $this->dispatcher->dispatch($event);
         $this->repository->saveWebhook($webhook);
         return $webhook;
+    }
+
+
+    private function getClient(): StripeClient
+    {
+        if (!$this->client) {
+            foreach (['stripe_version', 'client_id', 'api_key', 'stripe_account'] as $variable) {
+                $setting = $this->getGateway()->getSetting($variable);
+                if ($setting !== null) {
+                    $params[$variable] = $setting;
+                }
+            }
+            if (!isset($params['api_key'])) {
+                throw new \RuntimeException('Stripe API key not set');
+            }
+            $this->client = new StripeClient($params);
+        }
+        return $this->client;
     }
 }

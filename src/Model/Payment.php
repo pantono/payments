@@ -149,4 +149,14 @@ class Payment
     {
         $this->redirectUrl = $redirectUrl;
     }
+
+    public function setDataValue(string $name, mixed $value): void
+    {
+        $this->data[$name] = $value;
+    }
+
+    public function getDataField(string $string): mixed
+    {
+        return $this->data[$string] ?? null;
+    }
 }
