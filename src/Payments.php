@@ -19,7 +19,7 @@ use Pantono\Payments\Model\PaymentMandateStatus;
 use Pantono\Config\Config;
 use Pantono\Payments\Event\PreGatewaySaveEvent;
 use Pantono\Payments\Event\PostGatewaySaveEvent;
-use Pantono\Container\Service\Locator;
+use Pantono\Contracts\Locator\LocatorInterface;
 
 class Payments
 {
@@ -34,9 +34,9 @@ class Payments
     public const MANDATE_STATUS_CANCELLED = 3;
     public const MANDATE_STATUS_EXPIRED = 4;
     private Config $config;
-    private Locator $locator;
+    private LocatorInterface $locator;
 
-    public function __construct(PaymentsRepository $repository, Hydrator $hydrator, EventDispatcher $dispatcher, Config $config, Locator $locator)
+    public function __construct(PaymentsRepository $repository, Hydrator $hydrator, EventDispatcher $dispatcher, Config $config, LocatorInterface $locator)
     {
         $this->repository = $repository;
         $this->hydrator = $hydrator;
