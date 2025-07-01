@@ -23,7 +23,7 @@ class Payment
     #[Filter('json_decode')]
     private array $responseData = [];
     private int $amount;
-    #[FieldName('status_id'), Locator(methodName: 'getStatusById', className: Payments::class)]
+    #[FieldName('status_id'), Locator(methodName: 'getPaymentStatusById', className: Payments::class)]
     private PaymentStatus $status;
     private \DateTimeImmutable $dateCreated;
     private \DateTimeImmutable $dateUpdated;
