@@ -50,8 +50,10 @@ class Stripe extends AbstractProvider
             $params['metadata'] = $payment->getDataField('metadata');
         }
         $intent = $this->getClient()->paymentIntents->create($params);
+        $payment->setProviderId($intent->id);
         $payment->setDataValue('payment_intent_id', $intent->id);
         $payment->setDataValue('client_secret', $intent->client_secret);
+        $this->payments->savePayment($payment);
     }
 
     public function lookupPaymentData(Payment $payment): ?PaymentIntent
