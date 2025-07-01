@@ -76,6 +76,7 @@ final class Payments extends AbstractMigration
         $this->table('payment')
             ->addColumn('gateway_id', 'integer', ['signed' => false])
             ->addColumn('mandate_id', 'integer', ['null' => true, 'signed' => false])
+            ->addColumn('provider_id', 'string', ['null' => true])
             ->addColumn('reference', 'string', ['null' => true])
             ->addColumn('currency', 'string', ['null' => true])
             ->addColumn('amount', 'integer')
@@ -88,16 +89,15 @@ final class Payments extends AbstractMigration
             ->addColumn('redirect_url', 'string', ['null' => true])
             ->addForeignKey('status_id', 'payment_status', 'id')
             ->addForeignKey('gateway_id', 'payment_gateway', 'id')
+            ->addIndex('provider_id')
             ->create();
 
         $this->table('payment_history')
             ->addColumn('payment_id', 'integer', ['signed' => false])
             ->addColumn('date', 'datetime')
-            ->addColumn('status_id', 'integer', ['signed' => false])
             ->addColumn('entry', 'text')
             ->addColumn('data', 'json')
             ->addForeignKey('payment_id', 'payment', 'id')
-            ->addForeignKey('status_id', 'payment_status', 'id')
             ->create();
 
         $this->table('payment_webhook')

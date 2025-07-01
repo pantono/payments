@@ -9,7 +9,6 @@ class PaymentHistory
     private ?int $id = null;
     private int $paymentId;
     private \DateTimeImmutable $date;
-    private PaymentStatus $status;
     private string $entry;
     #[Filter('json_decode')]
     private array $data;
@@ -42,16 +41,6 @@ class PaymentHistory
     public function setDate(\DateTimeImmutable $date): void
     {
         $this->date = $date;
-    }
-
-    public function getStatus(): PaymentStatus
-    {
-        return $this->status;
-    }
-
-    public function setStatus(PaymentStatus $status): void
-    {
-        $this->status = $status;
     }
 
     public function getEntry(): string

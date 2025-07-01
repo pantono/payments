@@ -73,19 +73,6 @@ class PaymentWebhook
         $this->type = $type;
     }
 
-    public function getDataValue(string $name): mixed
-    {
-        $webhookData = $this->getData();
-        $objectData = $webhookData['data']['object'] ?? null;
-        return $objectData[$name] ?? null;
-    }
-
-    public function getObjectData(): ?array
-    {
-        $webhookData = $this->getData();
-        return $webhookData['data']['object'] ?? null;
-    }
-
     public function getHeaders(): array
     {
         return $this->headers;

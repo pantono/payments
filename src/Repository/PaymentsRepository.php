@@ -15,6 +15,12 @@ class PaymentsRepository extends MysqlRepository
         return $this->selectSingleRowLock('payment', 'id', $id);
     }
 
+
+    public function getPaymentByProviderId(string $id): ?array
+    {
+        return $this->selectSingleRow('payment', 'provider_id', $id);
+    }
+
     public function getPaymentByReference(mixed $reference): ?array
     {
         return $this->selectSingleRowLock('payment', 'reference', $reference);
@@ -85,5 +91,15 @@ class PaymentsRepository extends MysqlRepository
         if ($id) {
             $webhook->setId($id);
         }
+    }
+
+    public function addHistoryToPayment(Payment $payment, string $entry, array $data = []): void
+    {
+        $this->getDb()->insert('payment_history', [
+            'payment_id' => $payment->getId(),
+            'date' => (new \DateTimeImmutable())->format('Y-m-d H:i:s'),
+            'entry' => $entry,
+            'data' => json_encode($data)
+        ]);
     }
 }

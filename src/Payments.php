@@ -53,6 +53,11 @@ class Payments
         return $this->hydrator->hydrate(Payment::class, $this->repository->getPaymentById($id));
     }
 
+    public function getPaymentByProviderId(string $id): ?Payment
+    {
+        return $this->hydrator->hydrate(Payment::class, $this->repository->getPaymentByProviderId($id));
+    }
+
     public function getPaymentByReference(string $reference): ?Payment
     {
         return $this->hydrator->hydrate(Payment::class, $this->repository->getPaymentByReference($reference));
@@ -214,5 +219,10 @@ class Payments
         $this->dispatcher->dispatch($event);
         $this->saveWebhook($webhook);
         return $webhook;
+    }
+
+    public function addHistoryToPayment(Payment $payment, string $entry, array $data = []): void
+    {
+        $this->repository->addHistoryToPayment($payment, $entry, $data);
     }
 }

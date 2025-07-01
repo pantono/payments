@@ -16,6 +16,7 @@ class Payment
     #[FieldName('gateway_id'), Locator(methodName: 'getPaymentGatewayById', className: Payments::class)]
     private PaymentGateway $gateway;
     private ?string $reference = null;
+    private ?string $providerId = null;
     private ?string $currency = null;
     #[Filter('json_decode')]
     private array $requestData = [];
@@ -58,6 +59,16 @@ class Payment
     public function setReference(?string $reference): void
     {
         $this->reference = $reference;
+    }
+
+    public function getProviderId(): ?string
+    {
+        return $this->providerId;
+    }
+
+    public function setProviderId(?string $providerId): void
+    {
+        $this->providerId = $providerId;
     }
 
     public function getRequestData(): array
