@@ -16,12 +16,13 @@ class PaymentWebhook
     #[Locator(methodName: 'getPaymentGatewayById', className: Payments::class), FieldName('gateway_id')]
     private PaymentGateway $gateway;
     private \DateTimeImmutable $date;
-    private string $type;
+    private ?string $type = null;
     #[Filter('json_decode')]
     private array $data;
     #[Filter('json_decode')]
     private array $headers;
     private bool $processed = false;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -62,12 +63,12 @@ class PaymentWebhook
         $this->data = $data;
     }
 
-    public function getType(): string
+    public function getType(): ?string
     {
         return $this->type;
     }
 
-    public function setType(string $type): void
+    public function setType(?string $type): void
     {
         $this->type = $type;
     }
