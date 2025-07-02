@@ -51,6 +51,8 @@ class Stripe extends AbstractProvider
         }
         $intent = $this->getClient()->paymentIntents->create($params);
         $payment->setProviderId($intent->id);
+        $payment->setRequestData($params);
+        $payment->setResponseData($intent->toArray());;
         $payment->setDataValue('payment_intent_id', $intent->id);
         $payment->setDataValue('client_secret', $intent->client_secret);
         $this->payments->savePayment($payment);
