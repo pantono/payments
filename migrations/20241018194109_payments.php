@@ -108,6 +108,7 @@ final class Payments extends AbstractMigration
             ->addColumn('data', 'json')
             ->addColumn('headers', 'json')
             ->addColumn('processed', 'boolean')
+            ->addColumn('verified', 'boolean')
             ->addIndex('type')
             ->addForeignKey('gateway_id', 'payment_gateway', 'id')
             ->create();

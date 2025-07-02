@@ -15,6 +15,8 @@ use Pantono\Payments\Event\PaymentWebhookEvent;
 use Pantono\Hydrator\Hydrator;
 use Stripe\PaymentIntent;
 use http\Env\Request;
+use Stripe\Webhook;
+use Stripe\Exception\SignatureVerificationException;
 
 class Stripe extends AbstractProvider
 {
@@ -113,6 +115,23 @@ class Stripe extends AbstractProvider
         }
         $mandate->setStatus($status);
         $this->payments->saveMandate($mandate);
+    }
+
+    public function verifyWebhook(PaymentWebhook $webhook): bool
+    {
+        if ($webhook->getRequest()) {
+            $secret = $this->getGateway()->getSetting('webhook_secret');
+            if ($secret) {
+                if ($webhook->getRequest()->headers->has('stripe-signature')) {
+                    try {
+                        Webhook::constructEvent($webhook->getRequest()->getContent(), $webhook->getRequest()->headers->get('stripe-signature'), $secret);
+                    } catch (SignatureVerificationException $e) {
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
     }
 
     private function getClient(): StripeClient

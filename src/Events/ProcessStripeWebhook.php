@@ -30,37 +30,45 @@ class ProcessStripeWebhook implements EventSubscriberInterface
     {
         $gateway = $event->getWebhook()->getGateway();
         if ($gateway->getProvider()->getController() === Stripe::class) {
-            $data = $this->getObjectFromData($event->getWebhook()->getData());
-            if (!$data) {
-                return;
-            }
-            if ($event->getWebhook()->getData()['type'] === 'payment_intent.created') {
-                $this->logHistoryForAttemptId($data->get('id'), 'Stripe payment created webhook received', $event->getWebhook()->getData());
-            }
-            if ($event->getWebhook()->getData()['type'] === 'payment_intent.succeeded') {
-                $status = $this->payments->getPaymentStatusById(Payments::STATUS_COMPLETED);
-                $this->logHistoryForAttemptId($data->get('id'), 'Stripe payment succeeded webhook received', $event->getWebhook()->getData(), $status);
-            }
-            if ($event->getWebhook()->getData()['type'] === 'payment_intent.payment_failed') {
-                $status = $this->payments->getPaymentStatusById(Payments::STATUS_FAILED);
-                $this->logHistoryForAttemptId($data->get('id'), 'Stripe payment failed webhook received', $event->getWebhook()->getData(), $status);
-            }
+            /**
+             * @var Stripe $controller
+             */
+            $controller = $this->payments->getProviderController($gateway);
+            if ($controller->verifyWebhook($event->getWebhook())) {
+                $event->getWebhook()->setVerified(true);
+                $this->payments->saveWebhook($event->getWebhook());
+                $data = $this->getObjectFromData($event->getWebhook()->getData());
+                if (!$data) {
+                    return;
+                }
+                if ($event->getWebhook()->getData()['type'] === 'payment_intent.created') {
+                    $this->logHistoryForAttemptId($data->get('id'), 'Stripe payment created webhook received', $event->getWebhook()->getData());
+                }
+                if ($event->getWebhook()->getData()['type'] === 'payment_intent.succeeded') {
+                    $status = $this->payments->getPaymentStatusById(Payments::STATUS_COMPLETED);
+                    $this->logHistoryForAttemptId($data->get('id'), 'Stripe payment succeeded webhook received', $event->getWebhook()->getData(), $status);
+                }
+                if ($event->getWebhook()->getData()['type'] === 'payment_intent.payment_failed') {
+                    $status = $this->payments->getPaymentStatusById(Payments::STATUS_FAILED);
+                    $this->logHistoryForAttemptId($data->get('id'), 'Stripe payment failed webhook received', $event->getWebhook()->getData(), $status);
+                }
 
-            if ($event->getWebhook()->getData()['type'] === 'charge.succeeded') {
-                $this->logHistoryForAttemptId($data->get('payment_intent'), 'Stripe payment charge succeeded', $event->getWebhook()->getData());
-            }
-            if ($event->getWebhook()->getData()['type'] === 'charge.failed') {
-                $this->logHistoryForAttemptId($data->get('payment_intent'), 'Stripe payment charge failed', $event->getWebhook()->getData());
-            }
-            if ($event->getWebhook()->getData()['type'] === 'charge.updated') {
-                $this->logHistoryForAttemptId($data->get('payment_intent'), 'Stripe payment charge updated', $event->getWebhook()->getData());
-            }
-            if ($event->getWebhook()->getData()['type'] === 'charge.dispute.created') {
-                $this->logHistoryForAttemptId($data->get('payment_intent'), 'Stripe dispute received', $event->getWebhook()->getData());
-            }
-            if ($event->getWebhook()->getData()['type'] === 'charge.dispute.funds_withdrawn') {
-                $status = $this->payments->getPaymentStatusById(Payments::STATUS_CHARGEBACK);
-                $this->logHistoryForAttemptId($data->get('payment_intent'), 'Stripe funds withdrawn', $event->getWebhook()->getData(), $status);
+                if ($event->getWebhook()->getData()['type'] === 'charge.succeeded') {
+                    $this->logHistoryForAttemptId($data->get('payment_intent'), 'Stripe payment charge succeeded', $event->getWebhook()->getData());
+                }
+                if ($event->getWebhook()->getData()['type'] === 'charge.failed') {
+                    $this->logHistoryForAttemptId($data->get('payment_intent'), 'Stripe payment charge failed', $event->getWebhook()->getData());
+                }
+                if ($event->getWebhook()->getData()['type'] === 'charge.updated') {
+                    $this->logHistoryForAttemptId($data->get('payment_intent'), 'Stripe payment charge updated', $event->getWebhook()->getData());
+                }
+                if ($event->getWebhook()->getData()['type'] === 'charge.dispute.created') {
+                    $this->logHistoryForAttemptId($data->get('payment_intent'), 'Stripe dispute received', $event->getWebhook()->getData());
+                }
+                if ($event->getWebhook()->getData()['type'] === 'charge.dispute.funds_withdrawn') {
+                    $status = $this->payments->getPaymentStatusById(Payments::STATUS_CHARGEBACK);
+                    $this->logHistoryForAttemptId($data->get('payment_intent'), 'Stripe funds withdrawn', $event->getWebhook()->getData(), $status);
+                }
             }
         }
     }

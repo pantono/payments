@@ -7,6 +7,8 @@ use Pantono\Database\Traits\SavableModel;
 use Pantono\Contracts\Attributes\Locator;
 use Pantono\Payments\Payments;
 use Pantono\Contracts\Attributes\FieldName;
+use Symfony\Component\HttpFoundation\Request;
+use Pantono\Contracts\Attributes\NoSave;
 
 class PaymentWebhook
 {
@@ -22,6 +24,9 @@ class PaymentWebhook
     #[Filter('json_decode')]
     private array $headers;
     private bool $processed = false;
+    private bool $verified = false;
+    #[NoSave]
+    private ?Request $request = null;
 
     public function getId(): ?int
     {
@@ -96,5 +101,25 @@ class PaymentWebhook
     public function setProcessed(bool $processed): void
     {
         $this->processed = $processed;
+    }
+
+    public function getRequest(): ?Request
+    {
+        return $this->request;
+    }
+
+    public function setRequest(?Request $request): void
+    {
+        $this->request = $request;
+    }
+
+    public function isVerified(): bool
+    {
+        return $this->verified;
+    }
+
+    public function setVerified(bool $verified): void
+    {
+        $this->verified = $verified;
     }
 }

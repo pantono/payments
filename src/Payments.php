@@ -214,6 +214,7 @@ class Payments
         $webhook->setHeaders($request->headers->all());
         $webhook->setGateway($paymentGateway);
         $webhook->setProcessed(false);
+        $webhook->setRequest($request);
         $this->saveWebhook($webhook);
         $event = new PaymentWebhookEvent();
         $event->setWebhook($webhook);
