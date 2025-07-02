@@ -2,3 +2,5 @@ process_stripe_mandate:
   class: Pantono\Payments\Events\ProcessStripeMandate
 process_stripe_webhook:
   class: Pantono\Payments\Events\ProcessStripeWebhook
+generic_payment_events:
+  class: Pantono\Payments\Events\GenericPaymentEvents

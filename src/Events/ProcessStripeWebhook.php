@@ -21,7 +21,7 @@ class ProcessStripeWebhook implements EventSubscriberInterface
     public static function getSubscribedEvents(): array
     {
         return [
-            PaymentWebhookEvent::class => ['handleStripeWebhook', 255]
+            PaymentWebhookEvent::class => ['handleStripeWebhook', 254]
         ];
     }
 
