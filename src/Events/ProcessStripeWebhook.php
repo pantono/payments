@@ -59,7 +59,8 @@ class ProcessStripeWebhook implements EventSubscriberInterface
                 $this->logHistoryForAttemptId($data->get('payment_intent'), 'Stripe dispute received', $event->getWebhook()->getData());
             }
             if ($event->getWebhook()->getData()['type'] === 'charge.dispute.funds_withdrawn') {
-                $this->logHistoryForAttemptId($data->get('payment_intent'), 'Stripe funds withdrawn', $event->getWebhook()->getData());
+                $status = $this->payments->getPaymentStatusById(Payments::STATUS_CHARGEBACK);
+                $this->logHistoryForAttemptId($data->get('payment_intent'), 'Stripe funds withdrawn', $event->getWebhook()->getData(), $status);
             }
         }
     }

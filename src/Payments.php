@@ -32,6 +32,7 @@ class Payments
     public const STATUS_PENDING = 1;
     public const STATUS_COMPLETED = 2;
     public const STATUS_FAILED = 3;
+    public const STATUS_CHARGEBACK = 4;
     public const MANDATE_STATUS_PENDING = 1;
     public const MANDATE_STATUS_ACTIVE = 2;
     public const MANDATE_STATUS_CANCELLED = 3;

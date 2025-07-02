@@ -41,6 +41,7 @@ final class Payments extends AbstractMigration
                     ['id' => 1, 'name' => 'Pending', 'completed' => 0, 'pending' => 1, 'failed' => 0],
                     ['id' => 2, 'name' => 'Completed', 'completed' => 1, 'pending' => 0, 'failed' => 0],
                     ['id' => 3, 'name' => 'Failed', 'completed' => 0, 'pending' => 0, 'failed' => 1],
+                    ['id' => 4, 'name' => 'Chargeback', 'completed' => 0, 'pending' => 0, 'failed' => 1],
                 ])->saveData();
         }
 
