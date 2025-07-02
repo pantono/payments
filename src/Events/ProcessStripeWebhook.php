@@ -35,6 +35,7 @@ class ProcessStripeWebhook implements EventSubscriberInterface
              */
             $controller = $this->payments->getProviderController($gateway);
             if ($controller->verifyWebhook($event->getWebhook())) {
+                $event->getWebhook()->setType($event->getWebhook()->getData()['type']);
                 $event->getWebhook()->setVerified(true);
                 $this->payments->saveWebhook($event->getWebhook());
                 $data = $this->getObjectFromData($event->getWebhook()->getData());
