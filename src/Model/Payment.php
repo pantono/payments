@@ -7,6 +7,8 @@ use Pantono\Contracts\Attributes\Filter;
 use Pantono\Database\Traits\SavableModel;
 use Pantono\Contracts\Attributes\Locator;
 use Pantono\Payments\Payments;
+use Crell\Serde\Attributes\Field;
+use Pantono\Contracts\Attributes\Lazy;
 
 class Payment
 {
@@ -30,6 +32,11 @@ class Payment
     #[Filter('json_decode')]
     private array $data = [];
     private ?string $redirectUrl = null;
+    /**
+     * @var PaymentHistory[]
+     */
+    #[Locator(methodName: 'getHistoryForPayment', className: Payments::class), FieldName('$this'), Lazy]
+    private array $history = [];
 
     public function getId(): ?int
     {
@@ -169,5 +176,15 @@ class Payment
     public function getDataField(string $string): mixed
     {
         return $this->data[$string] ?? null;
+    }
+
+    public function getHistory(): array
+    {
+        return $this->history;
+    }
+
+    public function setHistory(array $history): void
+    {
+        $this->history = $history;
     }
 }

@@ -42,6 +42,7 @@ class ProcessStripeWebhook implements EventSubscriberInterface
                 if (!$data) {
                     return;
                 }
+                //Payment Intents
                 if ($event->getWebhook()->getData()['type'] === 'payment_intent.created') {
                     $this->logHistoryForAttemptId($data->get('id'), 'Stripe payment created webhook received', $event->getWebhook()->getData());
                 }
@@ -54,6 +55,24 @@ class ProcessStripeWebhook implements EventSubscriberInterface
                     $this->logHistoryForAttemptId($data->get('id'), 'Stripe payment failed webhook received', $event->getWebhook()->getData(), $status);
                 }
 
+                //Mandates
+                if ($event->getWebhook()->getData()['type'] === 'setup_intent.succeeded') {
+                    $id = $data->get('id');
+                    $mandate = $this->payments->getMandateByReference($id);
+                    if ($mandate) {
+                        $mandate->setResponseData($data->all());
+                        if ($data->get('status') === 'succeeded') {
+                            $mandate->setStartDate(new \DateTimeImmutable());
+                            $status = $this->payments->getMandateStatusById(Payments::MANDATE_STATUS_ACTIVE);
+                            if ($status) {
+                                $mandate->setStatus($status);
+                            }
+                        }
+                    }
+                }
+
+
+                //Charges
                 if ($event->getWebhook()->getData()['type'] === 'charge.succeeded') {
                     $this->logHistoryForAttemptId($data->get('payment_intent'), 'Stripe payment charge succeeded', $event->getWebhook()->getData());
                 }

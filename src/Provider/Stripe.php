@@ -98,7 +98,20 @@ class Stripe extends AbstractProvider
 
     public function chargeMandate(PaymentMandate $mandate, int $amountInPence)
     {
+        $this->getClient()->paymentIntents->create([
+            'amount' => $amountInPence,
+            'currency' => 'usd',
+//            'customer' => $customerId,
+            'payment_method' => $mandate->getResponseData()['payment_method'],
+            'off_session' => true,
+            'confirm' => true,
+            'description' => 'One-time charge',
+            'metadata' => [
+                'order_id' => 'ORDER-123', // Your internal reference
+            ],
+            'statement_descriptor' => 'Your Company Name',
 
+        ]);
     }
 
     public function getMandateBySetupIntentId(string $setupIntentId): ?PaymentMandate
@@ -122,9 +135,9 @@ class Stripe extends AbstractProvider
         if ($webhook->getRequest()) {
             $secret = $this->getGateway()->getSetting('webhook_secret');
             if ($secret) {
-                if ($webhook->getRequest()->headers->has('stripe-signature')) {
+                if ($sig = $webhook->getRequest()->headers->get('stripe-signature')) {
                     try {
-                        Webhook::constructEvent($webhook->getRequest()->getContent(), $webhook->getRequest()->headers->get('stripe-signature'), $secret);
+                        Webhook::constructEvent($webhook->getRequest()->getContent(), $sig, $secret);
                     } catch (SignatureVerificationException $e) {
                         return false;
                     }

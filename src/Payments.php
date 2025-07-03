@@ -129,7 +129,7 @@ class Payments
         }
         $mandate = new PaymentMandate();
         $mandate->setPaymentGateway($gateway);
-        $mandate->setData($requestData);
+        $mandate->setSetupData($requestData);
         $mandate->setStatus($pendingStatus);
         $mandate->setCurrency($currency);
 
