@@ -116,6 +116,7 @@ class Payments
         $payment->setAmount($amountInPence);
         $payment->setRequestData($requestData);
         $payment->setStatus($pendingStatus);
+        $this->savePayment($payment);
         $this->getProviderController($gateway)->initiate($payment);
         $this->savePayment($payment);
         return $payment;

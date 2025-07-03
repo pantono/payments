@@ -4,9 +4,17 @@ namespace Pantono\Payments\Provider;
 
 use Pantono\Payments\Model\Payment;
 use Braintree\Gateway;
+use Symfony\Component\HttpFoundation\Session\Session;
 
 class Braintree extends AbstractProvider
 {
+    private Session $session;
+
+    public function __construct(Session $session)
+    {
+        $this->session = $session;
+    }
+
     public function supportsRecurring(): bool
     {
         return true;
@@ -20,6 +28,7 @@ class Braintree extends AbstractProvider
         }
         $token = $this->createClient()->clientToken()->generate($params);
         $payment->setDataValue('client_token', $token);
+        $this->session->set('payment_id', $payment->getId());
     }
 
     public function handleResponse(array $data): void
