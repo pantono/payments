@@ -5,6 +5,8 @@ namespace Pantono\Payments\Provider;
 use Pantono\Payments\Model\Payment;
 use Braintree\Gateway;
 use Symfony\Component\HttpFoundation\Session\Session;
+use function Crell\fp\method;
+use Pantono\Payments\Payments;
 
 class Braintree extends AbstractProvider
 {
@@ -33,7 +35,33 @@ class Braintree extends AbstractProvider
 
     public function handleResponse(array $data): void
     {
-        // TODO: Implement handleResponse() method.
+        $paymentId = $data['payment_id'] ?? null;
+        $paymentMethodNonce = $data['payment_method_nonce'] ?? null;
+        $paymentDeviceData = $data['payment_device_data'] ?? null;
+        if (!$paymentId || $paymentMethodNonce) {
+            throw new \RuntimeException('Payment information not set');
+        }
+        $payment = $this->payments->getPaymentById($paymentId);
+        if (!$payment) {
+            throw new \RuntimeException('Payment not found');
+        }
+        $result = $this->createClient()->transaction()->sale([
+            'amount' => $payment->getAmount() / 100,
+            'paymentMethodNonce' => $paymentMethodNonce,
+            'deviceData' => $paymentDeviceData,
+            'options' => [
+                'submitForSettlement' => True
+            ]
+        ]);
+
+        if ($result->success) {
+            $status = $this->payments->getPaymentStatusById(Payments::STATUS_COMPLETED);
+            if ($status) {
+                $payment->setStatus($status);
+            }
+            $payment->setResponseData($result->toArray());
+            $this->payments->savePayment($payment);
+        }
     }
 
     public function createClient(): Gateway
