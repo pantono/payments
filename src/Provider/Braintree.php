@@ -33,7 +33,7 @@ class Braintree extends AbstractProvider
         $this->session->set('payment_id', $payment->getId());
     }
 
-    public function handleResponse(array $data): void
+    public function handleResponse(array $data): ?Payment
     {
         $paymentId = $data['payment_id'] ?? null;
         $paymentMethodNonce = $data['payment_method_nonce'] ?? null;
@@ -62,6 +62,7 @@ class Braintree extends AbstractProvider
             $payment->setResponseData($result->toArray());
             $this->payments->savePayment($payment);
         }
+        return $payment;
     }
 
     public function createClient(): Gateway

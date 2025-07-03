@@ -17,6 +17,7 @@ use Stripe\PaymentIntent;
 use http\Env\Request;
 use Stripe\Webhook;
 use Stripe\Exception\SignatureVerificationException;
+use Twilio\TwiML\Voice\Pay;
 
 class Stripe extends AbstractProvider
 {
@@ -69,9 +70,9 @@ class Stripe extends AbstractProvider
         return null;
     }
 
-    public function handleResponse(array $data): void
+    public function handleResponse(array $data): ?Payment
     {
-        // TODO: Implement handleResponse() method.
+        return null;
     }
 
     public function processMandate(PaymentMandate $mandate): void

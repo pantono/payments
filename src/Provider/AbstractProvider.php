@@ -20,7 +20,7 @@ abstract class AbstractProvider
 
     abstract public function initiate(Payment $payment): void;
 
-    abstract public function handleResponse(array $data): void;
+    abstract public function handleResponse(array $data): ?Payment;
 
     public function processMandate(PaymentMandate $mandate): void
     {
