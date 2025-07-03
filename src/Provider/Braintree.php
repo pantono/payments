@@ -38,7 +38,7 @@ class Braintree extends AbstractProvider
         $paymentId = $data['payment_id'] ?? null;
         $paymentMethodNonce = $data['payment_method_nonce'] ?? null;
         $paymentDeviceData = $data['payment_device_data'] ?? null;
-        if (!$paymentId || $paymentMethodNonce) {
+        if (!$paymentId || !$paymentMethodNonce) {
             throw new \RuntimeException('Payment information not set');
         }
         $payment = $this->payments->getPaymentById($paymentId);
