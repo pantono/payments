@@ -21,6 +21,7 @@ class Payment
     private ?string $providerId = null;
     private ?string $currency = null;
     private ?string $paymentMethodName = null;
+    private ?string $authCode = null;
     #[Filter('json_decode')]
     private array $cardData = [];
     #[Filter('json_decode')]
@@ -129,6 +130,16 @@ class Payment
     public function setCardData(array $cardData): void
     {
         $this->cardData = $cardData;
+    }
+
+    public function getAuthCode(): ?string
+    {
+        return $this->authCode;
+    }
+
+    public function setAuthCode(?string $authCode): void
+    {
+        $this->authCode = $authCode;
     }
 
     public function getAmount(): int
