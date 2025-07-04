@@ -71,7 +71,7 @@ class Braintree extends AbstractProvider
                 $this->payments->addHistoryToPayment($payment, 'Braintree: ' . $item->status, $item->toArray(), $item->timestamp);
             }
             $payment->setCardData($result->transaction->creditCardDetails->toArray());
-            $payment->setPaymentMethodName($result->tranaction->creditCardDetails->maskedNumber);;
+            $payment->setPaymentMethodName($result->transaction->creditCardDetails->maskedNumber);
             $payment->setCurrency($result->transaction->currencyIsoCode);
             $this->payments->savePayment($payment);
         } else {
