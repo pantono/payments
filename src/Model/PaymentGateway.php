@@ -59,7 +59,7 @@ class PaymentGateway
         $this->settings = $settings;
     }
 
-    public function getSetting(string $name, mixed $default): mixed
+    public function getSetting(string $name, mixed $default = null): mixed
     {
         $settings = $this->getSettings();
         return $settings[$name] ?? $default;
