@@ -48,15 +48,18 @@ class Braintree extends AbstractProvider
         if (!$payment) {
             throw new \RuntimeException('Payment not found');
         }
-        $result = $this->createClient()->transaction()->sale([
+        $saleParams = [
             'amount' => $payment->getAmount() / 100,
-            'currency' => $this->getGateway()->getSetting('currency', 'GBP'),
             'paymentMethodNonce' => $paymentMethodNonce,
             'deviceData' => $paymentDeviceData,
             'options' => [
                 'submitForSettlement' => True
             ]
-        ]);
+        ];
+        if ($this->getGateway()->getSetting('merchantAccountId')) {
+            $saleParams['merchantAccountId'] = $this->getGateway()->getSetting('merchantAccountId');
+        }
+        $result = $this->createClient()->transaction()->sale($saleParams);
         if ($result instanceof Successful) {
             $status = $this->payments->getPaymentStatusById(Payments::STATUS_COMPLETED);
             if ($status) {
