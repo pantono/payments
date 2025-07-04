@@ -72,7 +72,7 @@ class Braintree extends AbstractProvider
             }
             $payment->setCardData($result->transaction->creditCardDetails->toArray());
             $payment->setPaymentMethodName($result->tranaction->creditCardDetails->maskedNumber);;
-            $payment->setCurrency($result->currencyIsoCode);
+            $payment->setCurrency($result->transaction->currencyIsoCode);
             $this->payments->savePayment($payment);
         } else {
             if ($payment->getStatus()->getId() !== Payments::STATUS_COMPLETED) {
