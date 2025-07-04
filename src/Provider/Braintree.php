@@ -7,6 +7,8 @@ use Braintree\Gateway;
 use Symfony\Component\HttpFoundation\Session\Session;
 use function Crell\fp\method;
 use Pantono\Payments\Payments;
+use Braintree\Result\Successful;
+use Pantono\Utilities\DateTimeParser;
 
 class Braintree extends AbstractProvider
 {
@@ -28,6 +30,7 @@ class Braintree extends AbstractProvider
         if ($payment->getDataField('customer_id')) {
             $params['customerId'] = $payment->getDataField('customer_id');
         }
+        $payment->setRequestData($params);
         $token = $this->createClient()->clientToken()->generate($params);
         $payment->setDataValue('client_token', $token);
         $this->session->set('payment_id', $payment->getId());
@@ -47,20 +50,33 @@ class Braintree extends AbstractProvider
         }
         $result = $this->createClient()->transaction()->sale([
             'amount' => $payment->getAmount() / 100,
+            'currency' => $this->getGateway()->getSetting('currency', 'GBP'),
             'paymentMethodNonce' => $paymentMethodNonce,
             'deviceData' => $paymentDeviceData,
             'options' => [
                 'submitForSettlement' => True
             ]
         ]);
-
-        if ($result->success) {
+        if ($result instanceof Successful) {
             $status = $this->payments->getPaymentStatusById(Payments::STATUS_COMPLETED);
             if ($status) {
                 $payment->setStatus($status);
             }
-            $payment->setResponseData($result->toArray());
+            $payment->setProviderId($result->transaction->id);
+            $payment->setResponseData($result->transaction->toArray());
             $this->payments->savePayment($payment);
+            foreach ($result->transaction->statusHistory as $item) {
+                $this->payments->addHistoryToPayment($payment, 'Braintree: ' . $item->status, $item->toArray(), DateTimeParser::parseDate($item->timestamp->date));
+            }
+        } else {
+            if ($payment->getStatus()->getId() !== Payments::STATUS_COMPLETED) {
+                $status = $this->payments->getPaymentStatusById(Payments::STATUS_FAILED);
+                if ($status) {
+                    $payment->setStatus($status);
+                }
+                $payment->setResponseData($result->toArray());
+                $this->payments->savePayment($payment);
+            }
         }
         return $payment;
     }

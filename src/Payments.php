@@ -224,8 +224,8 @@ class Payments
         return $webhook;
     }
 
-    public function addHistoryToPayment(Payment $payment, string $entry, array $data = []): void
+    public function addHistoryToPayment(Payment $payment, string $entry, array $data = [], ?\DateTimeInterface $date = null): void
     {
-        $this->repository->addHistoryToPayment($payment, $entry, $data);
+        $this->repository->addHistoryToPayment($payment, $entry, $data, $date);
     }
 }

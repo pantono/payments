@@ -93,11 +93,11 @@ class PaymentsRepository extends MysqlRepository
         }
     }
 
-    public function addHistoryToPayment(Payment $payment, string $entry, array $data = []): void
+    public function addHistoryToPayment(Payment $payment, string $entry, array $data = [], ?\DateTimeInterface $date = null): void
     {
         $this->getDb()->insert('payment_history', [
             'payment_id' => $payment->getId(),
-            'date' => (new \DateTimeImmutable())->format('Y-m-d H:i:s'),
+            'date' => ($date ?: new \DateTimeImmutable())->format('Y-m-d H:i:s'),
             'entry' => $entry,
             'data' => json_encode($data)
         ]);

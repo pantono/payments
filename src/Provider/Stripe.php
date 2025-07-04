@@ -97,7 +97,7 @@ class Stripe extends AbstractProvider
         $this->getPayments()->saveMandate($mandate);
     }
 
-    public function chargeMandate(PaymentMandate $mandate, int $amountInPence)
+    public function chargeMandate(PaymentMandate $mandate, int $amountInPence): void
     {
         $this->getClient()->paymentIntents->create([
             'amount' => $amountInPence,
@@ -111,7 +111,6 @@ class Stripe extends AbstractProvider
                 'order_id' => 'ORDER-123', // Your internal reference
             ],
             'statement_descriptor' => 'Your Company Name',
-
         ]);
     }
 
