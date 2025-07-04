@@ -20,6 +20,9 @@ class Payment
     private ?string $reference = null;
     private ?string $providerId = null;
     private ?string $currency = null;
+    private ?string $paymentMethodName = null;
+    #[Filter('json_decode')]
+    private array $cardData = [];
     #[Filter('json_decode')]
     private array $requestData = [];
     #[Filter('json_decode')]
@@ -106,6 +109,26 @@ class Payment
     public function setCurrency(?string $currency): void
     {
         $this->currency = $currency;
+    }
+
+    public function getPaymentMethodName(): ?string
+    {
+        return $this->paymentMethodName;
+    }
+
+    public function setPaymentMethodName(?string $paymentMethodName): void
+    {
+        $this->paymentMethodName = $paymentMethodName;
+    }
+
+    public function getCardData(): array
+    {
+        return $this->cardData;
+    }
+
+    public function setCardData(array $cardData): void
+    {
+        $this->cardData = $cardData;
     }
 
     public function getAmount(): int

@@ -67,10 +67,13 @@ class Braintree extends AbstractProvider
             }
             $payment->setProviderId($result->transaction->id);
             $payment->setResponseData($result->transaction->toArray());
-            $this->payments->savePayment($payment);
             foreach ($result->transaction->statusHistory as $item) {
                 $this->payments->addHistoryToPayment($payment, 'Braintree: ' . $item->status, $item->toArray(), $item->timestamp);
             }
+            $payment->setCardData($result->creditCardDetails->toArray());
+            $payment->setPaymentMethodName($result->creditCardDetails->maskedNumber);;
+            $payment->setCurrency($result->currencyIsoCode);
+            $this->payments->savePayment($payment);
         } else {
             if ($payment->getStatus()->getId() !== Payments::STATUS_COMPLETED) {
                 $status = $this->payments->getPaymentStatusById(Payments::STATUS_FAILED);

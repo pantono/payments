@@ -82,14 +82,16 @@ final class Payments extends AbstractMigration
             ->create();
 
         $this->table('payment')
+            ->addColumn('request_data', 'json')
             ->addColumn('gateway_id', 'integer', ['signed' => false])
             ->addColumn('mandate_id', 'integer', ['null' => true, 'signed' => false])
             ->addColumn('provider_id', 'string', ['null' => true])
             ->addColumn('reference', 'string', ['null' => true])
             ->addColumn('currency', 'string', ['null' => true])
+            ->addColumn('payment_method_name', 'string', ['null' => true])
+            ->addColumn('card_details', 'json', ['null' => true])
             ->addColumn('amount', 'integer')
             ->addColumn('status_id', 'integer', ['signed' => false])
-            ->addColumn('request_data', 'json')
             ->addColumn('response_data', 'json')
             ->addColumn('date_created', 'datetime')
             ->addColumn('date_updated', 'datetime')
