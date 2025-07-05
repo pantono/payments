@@ -48,6 +48,10 @@ class ProcessStripeWebhook implements EventSubscriberInterface
                 }
                 if ($event->getWebhook()->getData()['type'] === 'payment_intent.succeeded') {
                     $status = $this->payments->getPaymentStatusById(Payments::STATUS_COMPLETED);
+                    $payment = $this->payments->getPaymentByProviderId($data->get('id'));
+                    if ($payment) {
+                        $payment->setResponseData($data->all());
+                    }
                     $this->logHistoryForAttemptId($data->get('id'), 'Stripe payment succeeded webhook received', $event->getWebhook()->getData(), $status);
                 }
                 if ($event->getWebhook()->getData()['type'] === 'payment_intent.payment_failed') {
@@ -71,9 +75,20 @@ class ProcessStripeWebhook implements EventSubscriberInterface
                     }
                 }
 
-
                 //Charges
                 if ($event->getWebhook()->getData()['type'] === 'charge.succeeded') {
+                    $id = $data->get('payment_intent');
+                    $payment = $this->payments->getPaymentByProviderId($id);
+                    if ($payment) {
+                        $details = $data->get('payment_method_details');
+                        $card = $details['card'] ?? null;
+                        if ($card) {
+                            $payment->setCardData($card);
+                            $payment->setAuthCode($card['authorization_code']);
+                            $payment->setPaymentMethodName($card['brand'] . ' ending ' . $card['last4']);
+                            $this->payments->savePayment($payment);
+                        }
+                    }
                     $this->logHistoryForAttemptId($data->get('payment_intent'), 'Stripe payment charge succeeded', $event->getWebhook()->getData());
                 }
                 if ($event->getWebhook()->getData()['type'] === 'charge.failed') {
