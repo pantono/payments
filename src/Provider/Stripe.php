@@ -90,7 +90,10 @@ class Stripe extends AbstractProvider
             'currency' => $mandate->getCurrency(),
             'mode' => 'setup',
             'ui_mode' => 'embedded',
-            'return_url' => $returnUrl
+            'return_url' => $returnUrl,
+            'payment_intent_data' => [
+                'setup_future_usage' => 'off_session',
+            ]
         ]);
         $mandate->setDataValue('session_response', $response);
         $mandate->setReference($response->setup_intent);
