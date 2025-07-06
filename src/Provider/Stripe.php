@@ -89,6 +89,7 @@ class Stripe extends AbstractProvider
         if ($mandateReturnUrl) {
             $returnUrl = $mandateReturnUrl;
         }
+        $stripeId = null;
         $customer = $mandate->getCustomer();
         if ($customer) {
             $customerId = $customer->getExternalIdByType('stripe');
@@ -106,8 +107,8 @@ class Stripe extends AbstractProvider
                     $this->customers->saveCustomer($customer);
                 }
             }
+            $stripeId = $customer->getExternalIdByType('stripe');
         }
-        $stripeId = $customer->getExternalIdByType('stripe');
         if (!$stripeId) {
             throw new \RuntimeException('Customer cannot be created on stripe');
         }
