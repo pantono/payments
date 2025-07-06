@@ -18,6 +18,7 @@ use http\Env\Request;
 use Stripe\Webhook;
 use Stripe\Exception\SignatureVerificationException;
 use Twilio\TwiML\Voice\Pay;
+use Pantono\Customers\Customers;
 
 class Stripe extends AbstractProvider
 {
@@ -25,12 +26,14 @@ class Stripe extends AbstractProvider
     private StripeRepository $repository;
     private EventDispatcher $dispatcher;
     private Hydrator $hydrator;
+    private Customers $customers;
 
-    public function __construct(StripeRepository $repository, EventDispatcher $dispatcher, Hydrator $hydrator)
+    public function __construct(StripeRepository $repository, EventDispatcher $dispatcher, Hydrator $hydrator, Customers $customers)
     {
         $this->repository = $repository;
         $this->dispatcher = $dispatcher;
         $this->hydrator = $hydrator;
+        $this->customers = $customers;
     }
 
     private ?StripeClient $client = null;
@@ -86,14 +89,30 @@ class Stripe extends AbstractProvider
         if ($mandateReturnUrl) {
             $returnUrl = $mandateReturnUrl;
         }
+        $customer = $mandate->getCustomer();
+        if ($customer) {
+            $customerId = $customer->getExternalIdByType('stripe');
+            if (!$customerId) {
+                $details = $customer->getDetails();
+                if ($details) {
+                    $stripeCustomer = $this->getClient()->customers->create([
+                        'email' => $details->getEmail(),
+                        'name' => $details->getForename() . ' ' . $details->getSurname(),
+                        'metadata' => [
+                            'customer_id' => $customer->getId()
+                        ]
+                    ]);
+                    $customer->updateExternalId('stripe', $stripeCustomer->id);
+                    $this->customers->saveCustomer($customer);
+                }
+            }
+        }
         $response = $this->getClient()->checkout->sessions->create([
             'currency' => $mandate->getCurrency(),
+            'customer' => $customer->getExternalIdByType('stripe'),
             'mode' => 'setup',
             'ui_mode' => 'embedded',
             'return_url' => $returnUrl,
-            'payment_intent_data' => [
-                'setup_future_usage' => 'off_session',
-            ]
         ]);
         $mandate->setDataValue('session_response', $response);
         $mandate->setReference($response->setup_intent);

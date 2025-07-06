@@ -23,6 +23,7 @@ use Pantono\Contracts\Locator\LocatorInterface;
 use Pantono\Payments\Model\PaymentWebhook;
 use Symfony\Component\HttpFoundation\Request;
 use Pantono\Payments\Event\PaymentWebhookEvent;
+use Pantono\Customers\Model\Customer;
 
 class Payments
 {
@@ -122,13 +123,14 @@ class Payments
         return $payment;
     }
 
-    public function createMandate(PaymentGateway $gateway, string $currency = 'GBP', array $requestData = []): PaymentMandate
+    public function createMandate(PaymentGateway $gateway, Customer $customer, string $currency = 'GBP', array $requestData = []): PaymentMandate
     {
         $pendingStatus = $this->getMandateStatusById(self::MANDATE_STATUS_PENDING);
         if ($pendingStatus === null) {
             throw new \RuntimeException('Pending mandate status does not exist');
         }
         $mandate = new PaymentMandate();
+        $mandate->setCustomer($customer);
         $mandate->setPaymentGateway($gateway);
         $mandate->setSetupData($requestData);
         $mandate->setStatus($pendingStatus);

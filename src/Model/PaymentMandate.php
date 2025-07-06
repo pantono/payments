@@ -7,6 +7,9 @@ use Pantono\Contracts\Attributes\Filter;
 use Pantono\Contracts\Attributes\Locator;
 use Pantono\Payments\Payments;
 use Pantono\Database\Traits\SavableModel;
+use Cassandra\Custom;
+use Pantono\Customers\Model\Customer;
+use Pantono\Customers\Customers;
 
 class PaymentMandate
 {
@@ -17,6 +20,8 @@ class PaymentMandate
     private PaymentGateway $paymentGateway;
     #[FieldName('status_id'), Locator(methodName: 'getMandateStatusById', className: Payments::class)]
     private PaymentMandateStatus $status;
+    #[FieldName('customer_id'), Locator(methodName: 'getCustomerById', className: Customers::class)]
+    private ?Customer $customer = null;
     private ?string $reference = null;
     private ?\DateTimeImmutable $startDate = null;
     private ?\DateTimeImmutable $endDate = null;
@@ -130,5 +135,15 @@ class PaymentMandate
     public function setResponseData(array $responseData): void
     {
         $this->responseData = $responseData;
+    }
+
+    public function getCustomer(): ?Customer
+    {
+        return $this->customer;
+    }
+
+    public function setCustomer(?Customer $customer): void
+    {
+        $this->customer = $customer;
     }
 }
