@@ -24,14 +24,12 @@ class Stripe extends AbstractProvider
 {
     public const PROVIDER_ID = 1;
     private StripeRepository $repository;
-    private EventDispatcher $dispatcher;
     private Hydrator $hydrator;
     private Customers $customers;
 
-    public function __construct(StripeRepository $repository, EventDispatcher $dispatcher, Hydrator $hydrator, Customers $customers)
+    public function __construct(StripeRepository $repository, Hydrator $hydrator, Customers $customers)
     {
         $this->repository = $repository;
-        $this->dispatcher = $dispatcher;
         $this->hydrator = $hydrator;
         $this->customers = $customers;
     }
