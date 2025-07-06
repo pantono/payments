@@ -72,6 +72,7 @@ class ProcessStripeWebhook implements EventSubscriberInterface
                                 $mandate->setStatus($status);
                             }
                         }
+                        $this->payments->saveMandate($mandate);
                     }
                 }
 
