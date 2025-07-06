@@ -107,9 +107,13 @@ class Stripe extends AbstractProvider
                 }
             }
         }
+        $stripeId = $customer->getExternalIdByType('stripe');
+        if (!$stripeId) {
+            throw new \RuntimeException('Customer cannot be created on stripe');
+        }
         $response = $this->getClient()->checkout->sessions->create([
             'currency' => $mandate->getCurrency(),
-            'customer' => $customer->getExternalIdByType('stripe'),
+            'customer' => $stripeId->getIdentifier(),
             'mode' => 'setup',
             'ui_mode' => 'embedded',
             'return_url' => $returnUrl,
