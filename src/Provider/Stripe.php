@@ -221,6 +221,7 @@ class Stripe extends AbstractProvider
             if ($method instanceof PaymentMethod) {
                 $card = $method->card;
                 if ($method->card) {
+                    //@phpstan-ignore-next-line
                     return $method->card->display_brand . ' ending ' . $method->card->last4;
                 }
                 return $method->type;

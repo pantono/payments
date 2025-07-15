@@ -5,19 +5,22 @@ namespace Pantono\Payments\Provider;
 use Pantono\Payments\Model\Payment;
 use Braintree\Gateway;
 use Symfony\Component\HttpFoundation\Session\Session;
-use function Crell\fp\method;
 use Pantono\Payments\Payments;
 use Braintree\Result\Successful;
-use Pantono\Utilities\DateTimeParser;
 use Pantono\Payments\Model\PaymentMandate;
+use Braintree\CustomerSearch;
+use Pantono\Customers\Customers;
 
 class Braintree extends AbstractProvider
 {
     private Session $session;
+    private Customers $customers;
+    private ?Gateway $gateway = null;
 
-    public function __construct(Session $session)
+    public function __construct(Session $session, Customers $customers)
     {
         $this->session = $session;
+        $this->customers = $customers;
     }
 
     public function supportsRecurring(): bool
@@ -95,13 +98,64 @@ class Braintree extends AbstractProvider
         return $payment;
     }
 
+    public function processMandate(PaymentMandate $mandate): void
+    {
+        $customer = $mandate->getCustomer();
+        if (!$customer) {
+            throw new \RuntimeException('Customer not available on mandate record');
+        }
+        $braintreeId = $customer->getExternalIdByType('braintree');
+        if (!$braintreeId) {
+            $email = (string)$customer->getDetails()?->getEmail();
+            $current = $this->findCustomerRecord($email);
+            if (!$current) {
+                $details = $customer->getDetails();
+                if (!$details) {
+                    throw new \RuntimeException('Customer details not set');
+                }
+                $result = $this->createClient()->customer()->create([
+                    'firstName' => $details->getForename(),
+                    'lastName' => $details->getSurname(),
+                    'email' => $details->getEmail(),
+                    'phone' => $details->getMobileNumber()
+                ]);
+                if (!$result->success) {
+                    throw new \RuntimeException('Unable to create customer record');
+                }
+                $current = $result->customer->id;
+            }
+            $customer->updateExternalId('braintree', $current);
+            $this->customers->saveCustomer($customer);
+            $braintreeId = $current;
+        }
+        $token = $this->createClient()->clientToken()->generate([
+            'customerId' => $braintreeId
+        ]);
+        $mandate->setSetupData(['token' => $token]);
+        $this->payments->saveMandate($mandate);
+    }
+
+    private function findCustomerRecord(string $email): ?string
+    {
+        $customers = $this->createClient()->customer()->search([
+            CustomerSearch::email()->is($email)
+        ]);
+        if ($customers->firstItem()) {
+            return $customers->firstItem()->id;
+        }
+        return null;
+    }
+
     public function createClient(): Gateway
     {
-        return new Gateway([
-            'environment' => $this->getGateway()->getSetting('environment'),
-            'merchantId' => $this->getGateway()->getSetting('merchantId'),
-            'publicKey' => $this->getGateway()->getSetting('publicKey'),
-            'privateKey' => $this->getGateway()->getSetting('privateKey'),
-        ]);
+        if (!$this->gateway) {
+            $this->gateway = new Gateway([
+                'environment' => $this->getGateway()->getSetting('environment'),
+                'merchantId' => $this->getGateway()->getSetting('merchantId'),
+                'publicKey' => $this->getGateway()->getSetting('publicKey'),
+                'privateKey' => $this->getGateway()->getSetting('privateKey'),
+            ]);
+        }
+        return $this->gateway;
     }
 }
