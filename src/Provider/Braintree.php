@@ -135,6 +135,22 @@ class Braintree extends AbstractProvider
         $this->payments->saveMandate($mandate);
     }
 
+    public function processMandate(PaymentMandate $mandate, array $data): void
+    {
+        $nonce = $data['payment_method_nonce'] ?? null;
+        $deviceData = $data['payment_device_data'] ?? null;
+
+        $result = $this->createClient()->paymentMethod()->create([
+            'customerId' => $data['customer_id'],
+            'paymentMethodNonce' => $nonce,
+            'deviceData' => $deviceData,
+            'options' => [
+                'makeDefault' => true
+            ]
+        ]);
+
+    }
+
     private function findCustomerRecord(string $email): ?string
     {
         $customers = $this->createClient()->customer()->search([

@@ -32,6 +32,11 @@ abstract class AbstractProvider
         throw new GatewayDoesNotSupportMandates('Gateway ' . $this->getGateway()->getProvider()->getName() . ' does not support mandates');
     }
 
+    public function processMandate(PaymentMandate $mandate, array $data): void
+    {
+        throw new GatewayDoesNotSupportMandates('Gateway ' . $this->getGateway()->getProvider()->getName() . ' does not support mandates');
+    }
+
     public function getGateway(): PaymentGateway
     {
         return $this->gateway;
