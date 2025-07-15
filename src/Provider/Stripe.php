@@ -151,6 +151,7 @@ class Stripe extends AbstractProvider
         $payment = new Payment();
         $payment->setAmount($amountInPence);
         $payment->setCurrency('gbp');
+        $payment->setGateway($this->getGateway());
         $payment->setPaymentMethodName($methodName);
         $payment->setMandate($mandate);
         $payment->setStatus($status);
