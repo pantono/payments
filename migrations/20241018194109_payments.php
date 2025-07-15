@@ -31,6 +31,7 @@ final class Payments extends AbstractMigration
         $this->table('payment_status')
             ->addColumn('name', 'string')
             ->addColumn('completed', 'boolean')
+            ->addColumn('refund', 'boolean')
             ->addColumn('pending', 'boolean')
             ->addColumn('failed', 'boolean')
             ->create();
@@ -38,10 +39,11 @@ final class Payments extends AbstractMigration
         if ($this->isMigratingUp()) {
             $this->table('payment_status')
                 ->insert([
-                    ['id' => 1, 'name' => 'Pending', 'completed' => 0, 'pending' => 1, 'failed' => 0],
-                    ['id' => 2, 'name' => 'Completed', 'completed' => 1, 'pending' => 0, 'failed' => 0],
-                    ['id' => 3, 'name' => 'Failed', 'completed' => 0, 'pending' => 0, 'failed' => 1],
-                    ['id' => 4, 'name' => 'Chargeback', 'completed' => 0, 'pending' => 0, 'failed' => 1],
+                    ['id' => 1, 'name' => 'Pending', 'completed' => 0, 'pending' => 1, 'failed' => 0, 'refund' => 0],
+                    ['id' => 2, 'name' => 'Completed', 'completed' => 1, 'pending' => 0, 'failed' => 0, 'refund' => 0],
+                    ['id' => 3, 'name' => 'Failed', 'completed' => 0, 'pending' => 0, 'failed' => 1, 'refund' => 0],
+                    ['id' => 4, 'name' => 'Chargeback', 'completed' => 0, 'pending' => 0, 'failed' => 1, 'refund' => 0],
+                    ['id' => 5, 'name' => 'Refunded', 'completed' => 0, 'pending' => 0, 'failed' => 1, 'refund' => 1],
                 ])->saveData();
         }
 
