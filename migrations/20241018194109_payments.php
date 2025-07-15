@@ -61,6 +61,7 @@ final class Payments extends AbstractMigration
                     ['id' => 2, 'name' => 'Active', 'active' => 1, 'cancelled' => 0, 'expired' => 0],
                     ['id' => 3, 'name' => 'Cancelled', 'active' => 0, 'cancelled' => 1, 'expired' => 0],
                     ['id' => 4, 'name' => 'Expired', 'active' => 0, 'cancelled' => 0, 'expired' => 1],
+                    ['id' => 5, 'name' => 'Error', 'active' => 0, 'cancelled' => 0, 'expired' => 0],
                 ])->saveData();
         }
 

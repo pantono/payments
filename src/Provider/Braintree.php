@@ -10,6 +10,7 @@ use Braintree\Result\Successful;
 use Pantono\Payments\Model\PaymentMandate;
 use Braintree\CustomerSearch;
 use Pantono\Customers\Customers;
+use Braintree\Result\Error;
 
 class Braintree extends AbstractProvider
 {
@@ -152,7 +153,14 @@ class Braintree extends AbstractProvider
                 'makeDefault' => true
             ]
         ]);
-
+        if ($result instanceof Error) {
+            $mandate->setDataValue('setup_error', $result->message);
+            $status = $this->payments->getMandateStatusById(Payments::MANDATE_STATUS_ERROR);
+            if ($status) {
+                $mandate->setStatus($status);
+            }
+            $this->payments->saveMandate($mandate);
+        }
     }
 
     private function findCustomerRecord(string $email): ?string
