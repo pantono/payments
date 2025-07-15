@@ -77,6 +77,27 @@ class ProcessStripeWebhook implements EventSubscriberInterface
                     }
                 }
 
+                //Refunds
+                if ($event->getWebhook()->getData()['type'] === 'refund.created') {
+                    $id = $data->get('payment_intent');
+                    $payment = $this->payments->getPaymentByProviderId($id);
+                    if ($payment) {
+                        $this->logHistoryForAttemptId($data->get('payment_intent'), 'Refund created', $event->getWebhook()->getData());
+                    }
+                }
+                if ($event->getWebhook()->getData()['type'] === 'charge.refunded') {
+                    $id = $data->get('payment_intent');
+                    $payment = $this->payments->getPaymentByProviderId($id);
+                    if ($payment) {
+                        $this->logHistoryForAttemptId($data->get('payment_intent'), 'Payment refunded', $event->getWebhook()->getData());
+                        $status = $this->payments->getPaymentStatusById(Payments::STATUS_REFUNDED);
+                        if ($status) {
+                            $payment->setStatus($status);
+                            $this->payments->savePayment($payment);
+                        }
+                    }
+                }
+
                 //Charges
                 if ($event->getWebhook()->getData()['type'] === 'charge.succeeded') {
                     $id = $data->get('payment_intent');
