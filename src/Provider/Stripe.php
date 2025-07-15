@@ -154,6 +154,7 @@ class Stripe extends AbstractProvider
         $payment->setGateway($this->getGateway());
         $payment->setPaymentMethodName($methodName);
         $payment->setMandate($mandate);
+        $payment->setReference($description);
         $payment->setDateCreated(new \DateTimeImmutable());
         $payment->setDateUpdated(new \DateTimeImmutable());
         $payment->setStatus($status);
