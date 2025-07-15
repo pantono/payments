@@ -159,8 +159,17 @@ class Braintree extends AbstractProvider
             if ($status) {
                 $mandate->setStatus($status);
             }
-            $this->payments->saveMandate($mandate);
         }
+        if ($result instanceof Successful) {
+            $status = $this->payments->getMandateStatusById(Payments::MANDATE_STATUS_ACTIVE);
+            if ($status) {
+                $mandate->setStatus($status);
+            }
+            $mandate->setReference($result->paymentMethod->globalId);
+            $mandate->setStartDate(new \DateTimeImmutable());
+            $mandate->setResponseData($result->paymentMethod->toArray());
+        }
+        $this->payments->saveMandate($mandate);
     }
 
     private function findCustomerRecord(string $email): ?string
