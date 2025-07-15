@@ -59,6 +59,10 @@ class Braintree extends AbstractProvider
         $payment->setDateCreated(new \DateTimeImmutable());
         $payment->setDateUpdated(new \DateTimeImmutable());
         $payment->setAmount($amountInPence);
+        $status = $this->payments->getPaymentStatusById(Payments::STATUS_PENDING);
+        if ($status) {
+            $payment->setStatus($status);
+        }
         if ($result instanceof Successful) {
             $status = $this->payments->getPaymentStatusById(Payments::STATUS_COMPLETED);
             if ($status) {
