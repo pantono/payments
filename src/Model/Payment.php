@@ -19,6 +19,8 @@ class Payment
     private PaymentGateway $gateway;
     private ?string $reference = null;
     private ?string $providerId = null;
+    #[FieldName('mandate_id'), Locator(methodName: 'getMandateById', className: Payments::class)]
+    private ?PaymentMandate $mandate = null;
     private ?string $currency = null;
     private ?string $paymentMethodName = null;
     private ?string $authCode = null;
@@ -60,6 +62,16 @@ class Payment
     public function setGateway(PaymentGateway $gateway): void
     {
         $this->gateway = $gateway;
+    }
+
+    public function getMandate(): ?PaymentMandate
+    {
+        return $this->mandate;
+    }
+
+    public function setMandate(?PaymentMandate $mandate): void
+    {
+        $this->mandate = $mandate;
     }
 
     public function getReference(): ?string

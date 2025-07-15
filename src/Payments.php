@@ -24,6 +24,7 @@ use Pantono\Payments\Model\PaymentWebhook;
 use Symfony\Component\HttpFoundation\Request;
 use Pantono\Payments\Event\PaymentWebhookEvent;
 use Pantono\Customers\Model\Customer;
+use Pantono\Payments\Filter\PaymentFilter;
 
 class Payments
 {
@@ -229,5 +230,21 @@ class Payments
     public function addHistoryToPayment(Payment $payment, string $entry, array $data = [], ?\DateTimeInterface $date = null): void
     {
         $this->repository->addHistoryToPayment($payment, $entry, $data, $date);
+    }
+
+    /**
+     * @return Payment[]
+     */
+    public function getPaymentsByFilter(PaymentFilter $filter): array
+    {
+        return $this->hydrator->hydrateSet(Payment::class, $this->repository->getPaymentsByFilter($filter));
+    }
+
+    /**
+     * @return PaymentMandate[]
+     */
+    public function getMandatesForCustomer(Customer $customer): array
+    {
+        return $this->hydrator->hydrateSet(PaymentMandate::class, $this->repository->getMandatesForCustomer($customer));
     }
 }

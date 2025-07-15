@@ -22,6 +22,11 @@ abstract class AbstractProvider
 
     abstract public function handleResponse(array $data): ?Payment;
 
+    public function chargeMandate(PaymentMandate $mandate, int $amountInPence, string $description): Payment
+    {
+        throw new GatewayDoesNotSupportMandates('Gateway ' . $this->getGateway()->getProvider()->getName() . ' does not support mandates');
+    }
+
     public function processMandate(PaymentMandate $mandate): void
     {
         throw new GatewayDoesNotSupportMandates('Gateway ' . $this->getGateway()->getProvider()->getName() . ' does not support mandates');

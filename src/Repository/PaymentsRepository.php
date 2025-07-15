@@ -7,6 +7,8 @@ use Pantono\Payments\Model\Payment;
 use Pantono\Payments\Model\PaymentMandate;
 use Pantono\Payments\Model\PaymentGateway;
 use Pantono\Payments\Model\PaymentWebhook;
+use Pantono\Payments\Filter\PaymentFilter;
+use Pantono\Customers\Model\Customer;
 
 class PaymentsRepository extends MysqlRepository
 {
@@ -101,5 +103,43 @@ class PaymentsRepository extends MysqlRepository
             'entry' => $entry,
             'data' => json_encode($data)
         ]);
+    }
+
+    public function getPaymentsByFilter(PaymentFilter $filter): array
+    {
+        $select = $this->getDb()->select()->from('payment');
+
+        if ($filter->getAuthCode() !== null) {
+            $select->where('payment.auth_code=?', $filter->getAuthCode());
+        }
+
+        if ($filter->getProviderId() !== null) {
+            $select->where('payment.provider_id=?', $filter->getProviderId());
+        }
+
+        if ($filter->getMinAmountInPence() !== null) {
+            $select->where('payment.amount >= ?', $filter->getMinAmountInPence());
+        }
+        if ($filter->getMaxAmountInPence() !== null) {
+            $select->where('payment.amount <= ?', $filter->getMaxAmountInPence());
+        }
+
+        if ($filter->getMandate() !== null) {
+            $select->where('payment.mandate_id=?', $filter->getMandate()->getId());
+        }
+
+        $filter->setTotalResults($this->getCount($select));
+
+        $select->limitPage($filter->getPage(), $filter->getPerPage());
+
+        return $this->getDb()->fetchAll($select);
+    }
+
+    public function getMandatesForCustomer(Customer $customer): array
+    {
+        $select = $this->getDb()->select()->from('payment_mandate')
+            ->where('payment_mandate.customer_id=?', $customer->getId());
+
+        return $this->getDb()->fetchAll($select);
     }
 }

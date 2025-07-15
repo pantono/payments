@@ -19,6 +19,8 @@ use Stripe\Webhook;
 use Stripe\Exception\SignatureVerificationException;
 use Twilio\TwiML\Voice\Pay;
 use Pantono\Customers\Customers;
+use Stripe\PaymentMethod;
+use Stripe\Exception\ApiErrorException;
 
 class Stripe extends AbstractProvider
 {
@@ -122,21 +124,39 @@ class Stripe extends AbstractProvider
         $this->getPayments()->saveMandate($mandate);
     }
 
-    public function chargeMandate(PaymentMandate $mandate, int $amountInPence): void
+    public function chargeMandate(PaymentMandate $mandate, int $amountInPence, string $description = 'Recurring charge'): Payment
     {
-        $this->getClient()->paymentIntents->create([
+        if ($mandate->getStatus()->isActive() === false) {
+            throw new \RuntimeException('Mandate is not available to charge');
+        }
+        $status = $this->payments->getPaymentStatusById(Payments::STATUS_PENDING);
+        if ($status === null) {
+            throw new \RuntimeException('Payment status not set');
+        }
+        $customerId = $mandate->getCustomer()?->getExternalIdByType('stripe')?->getIdentifier();
+        $methodId = $this->getClient()->paymentMethods->retrieve($mandate->getResponseData()['payment_method']);
+        $methodName = $this->getPaymentMethodNameFromId($methodId);
+        $response = $this->getClient()->paymentIntents->create([
             'amount' => $amountInPence,
-            'currency' => 'usd',
-//            'customer' => $customerId,
+            'currency' => 'gbp',
+            'customer' => $customerId,
             'payment_method' => $mandate->getResponseData()['payment_method'],
             'off_session' => true,
             'confirm' => true,
-            'description' => 'One-time charge',
+            'description' => $description,
             'metadata' => [
                 'order_id' => 'ORDER-123', // Your internal reference
             ],
-            'statement_descriptor' => 'Your Company Name',
         ]);
+        $payment = new Payment();
+        $payment->setAmount($amountInPence);
+        $payment->setCurrency('gbp');
+        $payment->setPaymentMethodName($methodName);
+        $payment->setMandate($mandate);
+        $payment->setStatus($status);
+        $payment->setProviderId($response->id);
+        $this->payments->savePayment($payment);
+        return $payment;
     }
 
     public function getMandateBySetupIntentId(string $setupIntentId): ?PaymentMandate
@@ -187,5 +207,23 @@ class Stripe extends AbstractProvider
             $this->client = new StripeClient($params);
         }
         return $this->client;
+    }
+
+
+    private function getPaymentMethodNameFromId(string $id): string
+    {
+        try {
+            $method = $this->getClient()->paymentMethods->retrieve($id);
+            if ($method instanceof PaymentMethod) {
+                $card = $method->card;
+                if ($method->card) {
+                    return $method->card->display_brand . ' ending ' . $method->card->last4;
+                }
+                return $method->type;
+            }
+        } catch (ApiErrorException $e) {
+
+        }
+        return 'Unknown';
     }
 }

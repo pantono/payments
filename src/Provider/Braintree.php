@@ -9,6 +9,7 @@ use function Crell\fp\method;
 use Pantono\Payments\Payments;
 use Braintree\Result\Successful;
 use Pantono\Utilities\DateTimeParser;
+use Pantono\Payments\Model\PaymentMandate;
 
 class Braintree extends AbstractProvider
 {
@@ -22,6 +23,11 @@ class Braintree extends AbstractProvider
     public function supportsRecurring(): bool
     {
         return true;
+    }
+
+    public function chargeMandate(PaymentMandate $mandate, int $amountInPence, string $description): Payment
+    {
+        throw new \RuntimeException('Not yet implemented');
     }
 
     public function initiate(Payment $payment): void
