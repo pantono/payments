@@ -161,6 +161,8 @@ class Braintree extends AbstractProvider
             }
         }
         if ($result instanceof Successful) {
+            $mandate->setDataValue('payment_method_nonce', $nonce);
+            $mandate->setDataValue('payment_device_data', $deviceData);
             $status = $this->payments->getMandateStatusById(Payments::MANDATE_STATUS_ACTIVE);
             if ($status) {
                 $mandate->setStatus($status);
