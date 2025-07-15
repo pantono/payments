@@ -126,10 +126,10 @@ class Braintree extends AbstractProvider
             }
             $customer->updateExternalId('braintree', $current);
             $this->customers->saveCustomer($customer);
-            $braintreeId = $current;
+            $braintreeId = $customer->getExternalIdByType('braintree');
         }
         $token = $this->createClient()->clientToken()->generate([
-            'customerId' => $braintreeId
+            'customerId' => $braintreeId->getIdentifier()
         ]);
         $mandate->setDataValue('token', $token);
         $this->payments->saveMandate($mandate);
