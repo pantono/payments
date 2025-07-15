@@ -31,7 +31,61 @@ class Braintree extends AbstractProvider
 
     public function chargeMandate(PaymentMandate $mandate, int $amountInPence, string $description): Payment
     {
-        throw new \RuntimeException('Not yet implemented');
+        if ($mandate->getStatus()->isActive() === false) {
+            throw new \RuntimeException('Mandate is not available to charge');
+        }
+        $status = $this->payments->getPaymentStatusById(Payments::STATUS_PENDING);
+        if ($status === null) {
+            throw new \RuntimeException('Payment status not set');
+        }
+        $customerId = $mandate->getCustomer()?->getExternalIdByType('braintree')?->getIdentifier();
+        if (!$customerId) {
+            throw new \RuntimeException('Customer cannot be created on braintree');
+        }
+        $saleParams = [
+            'amount' => $amountInPence / 100,
+            'paymentMethodNonce' => $mandate->getDataValue('payment_method_nonce'),
+            'deviceData' => $mandate->getDataValue('payment_device_data'),
+            'options' => [
+                'submitForSettlement' => True
+            ]
+        ];
+        if ($this->getGateway()->getSetting('merchantAccountId')) {
+            $saleParams['merchantAccountId'] = $this->getGateway()->getSetting('merchantAccountId');
+        }
+        $result = $this->createClient()->transaction()->sale($saleParams);
+        $payment = new Payment();
+        $payment->setMandate($mandate);
+        $payment->setDateCreated(new \DateTimeImmutable());
+        $payment->setDateUpdated(new \DateTimeImmutable());
+        $payment->setAmount($amountInPence);
+        if ($result instanceof Successful) {
+            $status = $this->payments->getPaymentStatusById(Payments::STATUS_COMPLETED);
+            if ($status) {
+                $payment->setStatus($status);
+            }
+            $payment->setProviderId($result->transaction->id);
+            $payment->setReference($result->transaction->id);
+            $payment->setResponseData($result->transaction->toArray());
+            foreach ($result->transaction->statusHistory as $item) {
+                $this->payments->addHistoryToPayment($payment, 'Braintree: ' . $item->status, $item->toArray(), $item->timestamp);
+            }
+            $payment->setCardData($result->transaction->creditCardDetails->toArray());
+            $payment->setPaymentMethodName($result->transaction->creditCardDetails->maskedNumber);
+            $payment->setAuthCode($result->transaction->paymentReceipt->processorAuthorizationCode);;
+            $payment->setCurrency($result->transaction->currencyIsoCode);
+            $this->payments->savePayment($payment);
+        } else {
+            if ($payment->getStatus()->getId() !== Payments::STATUS_COMPLETED) {
+                $status = $this->payments->getPaymentStatusById(Payments::STATUS_FAILED);
+                if ($status) {
+                    $payment->setStatus($status);
+                }
+                $payment->setResponseData($result->toArray());
+                $this->payments->savePayment($payment);
+            }
+        }
+        return $payment;
     }
 
     public function initiate(Payment $payment): void
