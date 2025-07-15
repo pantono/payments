@@ -70,6 +70,7 @@ class ProcessStripeWebhook implements EventSubscriberInterface
                             $status = $this->payments->getMandateStatusById(Payments::MANDATE_STATUS_ACTIVE);
                             if ($status) {
                                 $mandate->setStatus($status);
+                                $this->payments->addHistoryToMandate($mandate, 'Completed mandate setup', $data->all());
                             }
                         }
                         $this->payments->saveMandate($mandate);

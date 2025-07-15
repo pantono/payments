@@ -81,6 +81,7 @@ final class Payments extends AbstractMigration
             ->addColumn('mandate_id', 'integer', ['signed' => false])
             ->addColumn('date', 'datetime')
             ->addColumn('entry', 'text')
+            ->addColumn('data', 'json')
             ->create();
 
         $this->table('payment')

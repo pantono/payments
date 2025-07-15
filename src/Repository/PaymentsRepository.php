@@ -142,4 +142,14 @@ class PaymentsRepository extends MysqlRepository
 
         return $this->getDb()->fetchAll($select);
     }
+
+    public function addHistoryToMandate(PaymentMandate $mandate, string $entry, array $data, ?\DateTimeInterface $date = null): void
+    {
+        $this->getDb()->insert('payment_mandate_history', [
+            'mandate_id' => $mandate->getId(),
+            'entry' => $entry,
+            'date' => ($date ?: new \DateTimeImmutable())->format('Y-m-d H:i:s'),
+            'data' => json_encode($data)
+        ]);
+    }
 }

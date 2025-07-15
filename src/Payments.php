@@ -232,6 +232,11 @@ class Payments
         $this->repository->addHistoryToPayment($payment, $entry, $data, $date);
     }
 
+    public function addHistoryToMandate(PaymentMandate $mandate, string $entry, array $data = [], ?\DateTimeInterface $date = null): void
+    {
+        $this->repository->addHistoryToMandate($mandate, $entry, $data, $date);
+    }
+
     /**
      * @return Payment[]
      */
