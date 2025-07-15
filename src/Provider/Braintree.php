@@ -98,7 +98,7 @@ class Braintree extends AbstractProvider
         return $payment;
     }
 
-    public function processMandate(PaymentMandate $mandate): void
+    public function initiateMandate(PaymentMandate $mandate): void
     {
         $customer = $mandate->getCustomer();
         if (!$customer) {

@@ -78,7 +78,7 @@ class Stripe extends AbstractProvider
         return null;
     }
 
-    public function processMandate(PaymentMandate $mandate): void
+    public function initiateMandate(PaymentMandate $mandate): void
     {
         $baseUrl = $this->getConfig()->getApplicationConfig()->getValue('base_url');
         $mandateReturnUrl = $this->getGateway()->getSetting('mandate_return_url');

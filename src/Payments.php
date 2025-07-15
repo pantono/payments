@@ -139,7 +139,7 @@ class Payments
         $mandate->setCurrency($currency);
 
         $this->saveMandate($mandate);
-        $this->getProviderController($gateway)->processMandate($mandate);
+        $this->getProviderController($gateway)->initiateMandate($mandate);
         return $mandate;
     }
 
