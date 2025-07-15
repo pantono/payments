@@ -140,7 +140,7 @@ class Braintree extends AbstractProvider
         $nonce = $data['payment_method_nonce'] ?? null;
         $deviceData = $data['payment_device_data'] ?? null;
 
-        $braintreeId = $mandate->getCustomer()->getExternalIdByType('braintree')?->getIdentifier();
+        $braintreeId = $mandate->getCustomer()?->getExternalIdByType('braintree')?->getIdentifier();
         if (!$braintreeId) {
             throw new \RuntimeException('Customer cannot be created on braintree');
         }
