@@ -44,8 +44,7 @@ class Braintree extends AbstractProvider
         }
         $saleParams = [
             'amount' => $amountInPence / 100,
-            'paymentMethodNonce' => $mandate->getDataValue('payment_method_nonce'),
-            'deviceData' => $mandate->getDataValue('payment_device_data'),
+            'paymentMethodToken' => $mandate->getDataValue('token'),
             'options' => [
                 'submitForSettlement' => True
             ]
