@@ -7,8 +7,8 @@ use Pantono\Contracts\Attributes\Filter;
 use Pantono\Database\Traits\SavableModel;
 use Pantono\Contracts\Attributes\Locator;
 use Pantono\Payments\Payments;
-use Crell\Serde\Attributes\Field;
 use Pantono\Contracts\Attributes\Lazy;
+use Pantono\Payments\Utility\CurrencyHelper;
 
 class Payment
 {
@@ -232,5 +232,18 @@ class Payment
     public function setHistory(array $history): void
     {
         $this->history = $history;
+    }
+
+    public function getDisplayAmount(): string
+    {
+        $number = number_format($this->amount / 100, 2, '.', '');
+        $currency = $this->getCurrency();
+        if ($currency) {
+            $symbol = CurrencyHelper::getSymbol($currency);
+            if ($symbol) {
+                return sprintf('%s%s', $symbol, $number);
+            }
+        }
+        return $number;
     }
 }
