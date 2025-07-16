@@ -59,6 +59,7 @@ class Braintree extends AbstractProvider
         $payment->setDateCreated(new \DateTimeImmutable());
         $payment->setDateUpdated(new \DateTimeImmutable());
         $payment->setAmount($amountInPence);
+        $payment->setGateway($mandate->getPaymentGateway());
         $status = $this->payments->getPaymentStatusById(Payments::STATUS_PENDING);
         if ($status) {
             $payment->setStatus($status);
@@ -225,7 +226,7 @@ class Braintree extends AbstractProvider
             if ($status) {
                 $mandate->setStatus($status);
             }
-            $mandate->setReference($result->paymentMethod->globalId);
+            $mandate->setReference($result->paymentMethod->token);
             $mandate->setStartDate(new \DateTimeImmutable());
             $mandate->setResponseData($result->paymentMethod->toArray());
         }
