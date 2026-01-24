@@ -9,7 +9,7 @@
     "pantono/contracts": "^1.0",
     "pantono/hydrator": "^1.0",
     "symfony/event-dispatcher": "^7.0",
-    "robmorgan/phinx": "^0.16.0",
+    "pantono/phinx": "^0.16.0",
     "pantono/queue": "^1.0",
     "league/omnipay": "^3.2",
     "omnipay/paypal": "^3.0",
@@ -18,7 +18,8 @@
     "pantono/core": "^1.0",
     "braintree/braintree_php": "^6.27",
     "pantono/customers": "^1.0",
-    "gocardless/gocardless-pro": "^7.2"
+    "gocardless/gocardless-pro": "^7.2",
+    "pantono/logger": "^0"
   },
   "require-dev": {
     "phpunit/phpunit": "10.3.4",
