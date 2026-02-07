@@ -4,7 +4,6 @@
   "type": "library",
   "require": {
     "php": ">=8.2",
-    "symfony/console": "^7.0",
     "pantono/database": "^1.0",
     "pantono/contracts": "^1.0",
     "pantono/hydrator": "^1.0",
