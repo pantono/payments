@@ -18,6 +18,7 @@ final class PaymentsMigration extends AbstractMigration
                     ['id' => 1, 'name' => 'Stripe', 'controller' => 'Pantono\Payments\Provider\Stripe'],
                     ['id' => 2, 'name' => 'Braintree', 'controller' => 'Pantono\Payments\Provider\Braintree'],
                     ['id' => 3, 'name' => 'Go Cardless', 'controller' => 'Pantono\Payments\Provider\GoCardless'],
+                    ['id' => 4, 'name' => 'Manual Bank Transfer', 'controller' => 'Pantono\Payments\Provider\ManualBankTransfer'],
                 ])->saveData();
         }
 
