@@ -2,15 +2,15 @@
 
 namespace Pantono\Payments\Repository;
 
-use Pantono\Database\Repository\MysqlRepository;
 use Pantono\Payments\Model\Payment;
 use Pantono\Payments\Model\PaymentMandate;
 use Pantono\Payments\Model\PaymentGateway;
 use Pantono\Payments\Model\PaymentWebhook;
 use Pantono\Payments\Filter\PaymentFilter;
 use Pantono\Customers\Model\Customer;
+use Pantono\Database\Repository\DefaultRepository;
 
-class PaymentsRepository extends MysqlRepository
+class PaymentsRepository extends DefaultRepository
 {
     public function getPaymentById(int $id): ?array
     {

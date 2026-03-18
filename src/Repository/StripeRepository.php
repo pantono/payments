@@ -2,15 +2,16 @@
 
 namespace Pantono\Payments\Repository;
 
-use Pantono\Database\Repository\MysqlRepository;
-use Pantono\Payments\Model\PaymentWebhook;
+use Pantono\Database\Repository\DefaultRepository;
 
-class StripeRepository extends MysqlRepository
+class StripeRepository extends DefaultRepository
 {
     public function getMandateBySetupIntentId(string $setupIntentId): ?array
     {
-        $sql = "SELECT * from payment_mandate where data->>'$.session_response.setup_intent' = :id";
-        $row = $this->getDb()->fetchRow($sql, ['id' => $setupIntentId]);
+        $select = $this->getDb()->select('p')->from('payment', 'p')
+            ->jsonWhere('data', ['session_response', 'setup_intent'], $setupIntentId);
+        
+        $row = $this->getDb()->fetchRow($select);
         return !empty($row) ? $row : null;
     }
 }
