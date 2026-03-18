@@ -3,17 +3,18 @@
 namespace Pantono\Payments\Model;
 
 use Pantono\Contracts\Attributes\Filter;
-use Pantono\Contracts\Attributes\Locator;
-use Pantono\Payments\Payments;
 use Pantono\Contracts\Attributes\FieldName;
 use Pantono\Database\Traits\SavableModel;
+use Pantono\Contracts\Attributes\Database\OneToOne;
+use Pantono\Contracts\Attributes\DatabaseTable;
 
+#[DatabaseTable('payment_gateway')]
 class PaymentGateway
 {
     use SavableModel;
 
     private ?int $id = null;
-    #[Locator(methodName: 'getProviderById', className: Payments::class), FieldName('provider_id')]
+    #[OneToOne(targetModel: PaymentProvider::class), FieldName('provider_id')]
     private PaymentProvider $provider;
     private string $name;
     #[Filter('json_decode')]

@@ -4,18 +4,19 @@ namespace Pantono\Payments\Model;
 
 use Pantono\Contracts\Attributes\Filter;
 use Pantono\Database\Traits\SavableModel;
-use Pantono\Contracts\Attributes\Locator;
-use Pantono\Payments\Payments;
 use Pantono\Contracts\Attributes\FieldName;
 use Symfony\Component\HttpFoundation\Request;
 use Pantono\Contracts\Attributes\NoSave;
+use Pantono\Contracts\Attributes\DatabaseTable;
+use Pantono\Contracts\Attributes\Database\OneToOne;
 
+#[DatabaseTable('payment_webhook')]
 class PaymentWebhook
 {
     use SavableModel;
 
     private ?int $id = null;
-    #[Locator(methodName: 'getPaymentGatewayById', className: Payments::class), FieldName('gateway_id')]
+    #[OneToOne(targetModel: PaymentGateway::class), FieldName('gateway_id')]
     private PaymentGateway $gateway;
     private \DateTimeImmutable $date;
     private ?string $type = null;

@@ -110,35 +110,38 @@ class PaymentsRepository extends MysqlRepository
         $select = $this->getDb()->select()->from('payment');
 
         if ($filter->getAuthCode() !== null) {
-            $select->where('payment.auth_code=?', $filter->getAuthCode());
+            $select->whereParam('payment.auth_code=?', $filter->getAuthCode());
         }
 
         if ($filter->getProviderId() !== null) {
-            $select->where('payment.provider_id=?', $filter->getProviderId());
+            $select->whereParam('payment.provider_id=?', $filter->getProviderId());
         }
 
         if ($filter->getMinAmountInPence() !== null) {
-            $select->where('payment.amount >= ?', $filter->getMinAmountInPence());
+            $select->whereParam('payment.amount >= ?', $filter->getMinAmountInPence());
         }
         if ($filter->getMaxAmountInPence() !== null) {
-            $select->where('payment.amount <= ?', $filter->getMaxAmountInPence());
+            $select->whereParam('payment.amount <= ?', $filter->getMaxAmountInPence());
         }
 
-        if ($filter->getMandate() !== null) {
-            $select->where('payment.mandate_id=?', $filter->getMandate()->getId());
+        if ($filter->getMandate()?->getId() !== null) {
+            $select->whereParam('payment.mandate_id=?', $filter->getMandate()->getId());
         }
 
         $filter->setTotalResults($this->getCount($select));
 
-        $select->limitPage($filter->getPage(), $filter->getPerPage());
+        $this->applyCountAndLimit($select, $filter);
 
         return $this->getDb()->fetchAll($select);
     }
 
     public function getMandatesForCustomer(Customer $customer): array
     {
+        if (!$customer->getId()) {
+            return [];
+        }
         $select = $this->getDb()->select()->from('payment_mandate')
-            ->where('payment_mandate.customer_id=?', $customer->getId());
+            ->whereParam('payment_mandate.customer_id=?', $customer->getId());
 
         return $this->getDb()->fetchAll($select);
     }

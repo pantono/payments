@@ -5,21 +5,23 @@ namespace Pantono\Payments\Model;
 use Pantono\Contracts\Attributes\FieldName;
 use Pantono\Contracts\Attributes\Filter;
 use Pantono\Database\Traits\SavableModel;
-use Pantono\Contracts\Attributes\Locator;
-use Pantono\Payments\Payments;
-use Pantono\Contracts\Attributes\Lazy;
 use Pantono\Payments\Utility\CurrencyHelper;
+use Pantono\Contracts\Attributes\DatabaseTable;
+use Pantono\Contracts\Attributes\Database\OneToOne;
+use Pantono\Contracts\Attributes\Database\OneToMany;
 
+#[DatabaseTable('payment')]
 class Payment
 {
     use SavableModel;
 
     private ?int $id = null;
-    #[FieldName('gateway_id'), Locator(methodName: 'getPaymentGatewayById', className: Payments::class)]
+    #[OneToOne(targetModel: PaymentGateway::class), FieldName('gateway_id')]
     private PaymentGateway $gateway;
     private ?string $reference = null;
     private ?string $providerId = null;
-    #[FieldName('mandate_id'), Locator(methodName: 'getMandateById', className: Payments::class)]
+
+    #[OneToOne(targetModel: PaymentMandate::class), FieldName('mandate_id')]
     private ?PaymentMandate $mandate = null;
     private ?string $currency = null;
     private ?string $paymentMethodName = null;
@@ -31,7 +33,7 @@ class Payment
     #[Filter('json_decode')]
     private array $responseData = [];
     private int $amount;
-    #[FieldName('status_id'), Locator(methodName: 'getPaymentStatusById', className: Payments::class)]
+    #[FieldName('status_id'), OneToOne(targetModel: PaymentStatus::class)]
     private PaymentStatus $status;
     private \DateTimeImmutable $dateCreated;
     private \DateTimeImmutable $dateUpdated;
@@ -41,7 +43,7 @@ class Payment
     /**
      * @var PaymentHistory[]
      */
-    #[Locator(methodName: 'getHistoryForPayment', className: Payments::class), FieldName('$this'), Lazy]
+    #[OneToMany(targetModel: PaymentHistory::class, mappedBy: 'payment_id')]
     private array $history = [];
 
     public function getId(): ?int

@@ -3,7 +3,9 @@
 namespace Pantono\Payments\Model;
 
 use Pantono\Contracts\Attributes\Filter;
+use Pantono\Contracts\Attributes\DatabaseTable;
 
+#[DatabaseTable('payment_history')]
 class PaymentHistory
 {
     private ?int $id = null;

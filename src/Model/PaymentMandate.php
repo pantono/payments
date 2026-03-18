@@ -4,23 +4,22 @@ namespace Pantono\Payments\Model;
 
 use Pantono\Contracts\Attributes\FieldName;
 use Pantono\Contracts\Attributes\Filter;
-use Pantono\Contracts\Attributes\Locator;
-use Pantono\Payments\Payments;
 use Pantono\Database\Traits\SavableModel;
-use Cassandra\Custom;
 use Pantono\Customers\Model\Customer;
-use Pantono\Customers\Customers;
+use Pantono\Contracts\Attributes\DatabaseTable;
+use Pantono\Contracts\Attributes\Database\OneToOne;
 
+#[DatabaseTable('payment_mandate')]
 class PaymentMandate
 {
     use SavableModel;
 
     private ?int $id = null;
-    #[FieldName('gateway_id'), Locator(methodName: 'getPaymentGatewayById', className: Payments::class)]
+    #[OneToOne(targetModel: PaymentGateway::class), FieldName('gateway_id')]
     private PaymentGateway $paymentGateway;
-    #[FieldName('status_id'), Locator(methodName: 'getMandateStatusById', className: Payments::class)]
+    #[FieldName('status_id'), OneToOne(targetModel: PaymentMandateStatus::class)]
     private PaymentMandateStatus $status;
-    #[FieldName('customer_id'), Locator(methodName: 'getCustomerById', className: Customers::class)]
+    #[FieldName('customer_id'), OneToOne(targetModel: Customer::class)]
     private ?Customer $customer = null;
     private ?string $reference = null;
     private ?\DateTimeImmutable $startDate = null;

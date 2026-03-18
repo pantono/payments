@@ -7,9 +7,9 @@ use Pantono\Payments\Payments;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\ParameterBag;
 use League\Fractal\Resource\ResourceAbstract;
-use Pantono\Payments\Provider\Stripe;
 use League\Fractal\Resource\Item;
 use Pantono\Core\Decorator\GenericArrayDecorator;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class PaymentWebhook extends AbstractEndpoint
 {
@@ -22,10 +22,13 @@ class PaymentWebhook extends AbstractEndpoint
 
     public function processRequest(ParameterBag $parameters): array|ResourceAbstract|Response
     {
-        $gatewayId = $this->getRequest()->get('id');
-        $gateway = $this->payments->getPaymentGatewayById($gatewayId);
+        $gatewayId = $this->getRequest()->query->get('id');
+        if (!$gatewayId) {
+            throw new NotFoundHttpException('Gateway does not exist');
+        }
+        $gateway = $this->payments->getPaymentGatewayById((int)$gatewayId);
         if ($gateway === null) {
-            throw new \RuntimeException('Gateway does not exist');
+            throw new NotFoundHttpException('Gateway does not exist');
         }
         $webhook = $this->payments->ingestWebhook($gateway, $this->getRequest());
         return new Item(['success' => true, 'id' => $webhook->getId()], new GenericArrayDecorator());

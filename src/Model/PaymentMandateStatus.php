@@ -2,6 +2,9 @@
 
 namespace Pantono\Payments\Model;
 
+use Pantono\Contracts\Attributes\DatabaseTable;
+
+#[DatabaseTable('payment_mandate_status')]
 class PaymentMandateStatus
 {
     private ?int $id = null;
