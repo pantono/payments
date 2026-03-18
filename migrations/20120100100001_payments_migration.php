@@ -108,6 +108,7 @@ final class PaymentsMigration extends AbstractMigration
             ->addForeignKey('status_id', 'payment_status', 'id')
             ->addForeignKey('gateway_id', 'payment_gateway', 'id')
             ->addIndex('provider_id')
+            ->addIndex('reference', ['unique' => true])
             ->create();
 
         $this->table('payment_history')
