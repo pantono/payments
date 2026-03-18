@@ -25,6 +25,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Pantono\Payments\Event\PaymentWebhookEvent;
 use Pantono\Customers\Model\Customer;
 use Pantono\Payments\Filter\PaymentFilter;
+use Pantono\Utilities\StringUtilities;
 
 class Payments
 {
@@ -115,6 +116,7 @@ class Payments
         $payment = new Payment();
         $payment->setDateCreated(new \DateTimeImmutable);
         $payment->setDateUpdated(new \DateTimeImmutable);
+        $payment->setReference($this->getAvailableToken());
         $payment->setCurrency($currency);
         $payment->setGateway($gateway);
         $payment->setAmount($amountInPence);
@@ -253,5 +255,14 @@ class Payments
     public function getMandatesForCustomer(Customer $customer): array
     {
         return $this->hydrator->hydrateSet(PaymentMandate::class, $this->repository->getMandatesForCustomer($customer));
+    }
+
+    private function getAvailableToken(): string
+    {
+        $token = StringUtilities::generateRandomToken(20);
+        while ($this->getPaymentByReference($token)) {
+            $token = StringUtilities::generateRandomToken(20);
+        }
+        return $token;
     }
 }
