@@ -102,6 +102,7 @@ class Braintree extends AbstractProvider
         $token = $this->createClient()->clientToken()->generate($params);
         $payment->setDataValue('client_token', $token);
         $this->session->set('payment_id', $payment->getId());
+        $this->payments->savePayment($payment);
     }
 
     public function handleResponse(array $data): ?Payment
