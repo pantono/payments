@@ -7,6 +7,7 @@ use Pantono\Contracts\Attributes\FieldName;
 use Pantono\Database\Traits\SavableModel;
 use Pantono\Contracts\Attributes\Database\OneToOne;
 use Pantono\Contracts\Attributes\DatabaseTable;
+use Pantono\Utilities\ApplicationHelper;
 
 #[DatabaseTable('payment_gateway')]
 class PaymentGateway
@@ -62,7 +63,13 @@ class PaymentGateway
 
     public function getSetting(string $name, mixed $default = null): mixed
     {
-        $settings = $this->getSettings();
+        $settings = $this->getInterpolatedSettings();
         return $settings[$name] ?? $default;
+    }
+
+    public function getInterpolatedSettings()
+    {
+        $settings = $this->getSettings();
+        return ApplicationHelper::interpolateEnv($settings);
     }
 }
