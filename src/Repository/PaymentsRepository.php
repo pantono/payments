@@ -20,7 +20,7 @@ class PaymentsRepository extends DefaultRepository
 
     public function getPaymentByProviderId(string $id): ?array
     {
-        return $this->selectSingleRow('payment', 'provider_id', $id);
+        return $this->selectSingleRowLock('payment', 'provider_id', $id);
     }
 
     public function getPaymentByReference(mixed $reference): ?array
