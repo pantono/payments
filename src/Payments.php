@@ -259,9 +259,9 @@ class Payments
 
     private function getAvailableToken(): string
     {
-        $token = StringUtilities::generateRandomToken(20);
+        $token = StringUtilities::generateUrlSafeToken(20);
         while ($this->getPaymentByReference($token)) {
-            $token = StringUtilities::generateRandomToken(20);
+            $token = StringUtilities::generateUrlSafeToken(20);
         }
         return $token;
     }
