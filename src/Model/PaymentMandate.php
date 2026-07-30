@@ -8,17 +8,18 @@ use Pantono\Database\Traits\SavableModel;
 use Pantono\Customers\Model\Customer;
 use Pantono\Contracts\Attributes\DatabaseTable;
 use Pantono\Contracts\Attributes\Database\OneToOne;
+use Pantono\Core\Application\Traits\DiffableTrait;
 
 #[DatabaseTable('payment_mandate')]
 class PaymentMandate
 {
-    use SavableModel;
+    use SavableModel, DiffableTrait;
 
     private ?int $id = null;
     #[OneToOne(targetModel: PaymentGateway::class), FieldName('gateway_id')]
-    private PaymentGateway $paymentGateway;
+    private ?PaymentGateway $paymentGateway = null;
     #[FieldName('status_id'), OneToOne(targetModel: PaymentMandateStatus::class)]
-    private PaymentMandateStatus $status;
+    private ?PaymentMandateStatus $status = null;
     #[FieldName('customer_id'), OneToOne(targetModel: Customer::class)]
     private ?Customer $customer = null;
     private ?string $reference = null;
@@ -40,12 +41,12 @@ class PaymentMandate
         $this->id = $id;
     }
 
-    public function getPaymentGateway(): PaymentGateway
+    public function getPaymentGateway(): ?PaymentGateway
     {
         return $this->paymentGateway;
     }
 
-    public function setPaymentGateway(PaymentGateway $paymentGateway): void
+    public function setPaymentGateway(?PaymentGateway $paymentGateway): void
     {
         $this->paymentGateway = $paymentGateway;
     }
@@ -106,12 +107,12 @@ class PaymentMandate
         $this->setupData = $data;
     }
 
-    public function getStatus(): PaymentMandateStatus
+    public function getStatus(): ?PaymentMandateStatus
     {
         return $this->status;
     }
 
-    public function setStatus(PaymentMandateStatus $status): void
+    public function setStatus(?PaymentMandateStatus $status): void
     {
         $this->status = $status;
     }
@@ -144,5 +145,20 @@ class PaymentMandate
     public function setCustomer(?Customer $customer): void
     {
         $this->customer = $customer;
+    }
+
+    public function toArray(): array
+    {
+        return [
+            'gateway_name' => $this->getPaymentGateway()?->getName() ?? 'N/A',
+            'customer_id' => $this->getCustomer()?->getId() ?? '',
+            'reference' => $this->getReference(),
+            'status' => $this->getStatus()?->getName() ?? 'N/A',
+            'start_date' => $this->getStartDate()?->format('Y-m-d') ?? '',
+            'end_date' => $this->getEndDate()?->format('Y-m-d') ?? '',
+            'currency' => $this->getCurrency(),
+            'setup_data' => $this->getSetupData(),
+            'response_data' => $this->getResponseData(),
+        ];
     }
 }

@@ -38,8 +38,8 @@ class GenericPaymentEvents implements EventSubscriberInterface
             $this->payments->addHistoryToMandate($event->getCurrent(), 'Created new mandate');
             return;
         }
-        if ($event->getPrevious()->getStatus()->getId() === $event->getCurrent()->getStatus()->getId()) {
-            $this->payments->addHistoryToMandate($event->getCurrent(), 'Changed status from ' . $event->getPrevious()->getStatus()->getName() . ' to ' . $event->getCurrent()->getStatus()->getName());
+        foreach ($event->getCurrent()->diff($event->getPrevious()) as $key => $diff) {
+            $this->payments->addHistoryToMandate($event->getCurrent(), 'Changed ' . $key . ' from ' . $diff['old'] . ' to ' . $diff['new']);
         }
     }
 }
