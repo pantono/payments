@@ -11,6 +11,7 @@ class StripeWebhookProcessor
 {
     private Payments $payments;
     private ParameterBag $parameters;
+    private ParameterBag $allParameters;
 
     public function __construct(Payments $payments, Event $event)
     {
@@ -20,16 +21,17 @@ class StripeWebhookProcessor
             throw new \RuntimeException('Invalid Stripe event data');
         }
         $this->parameters = new ParameterBag($data['data']['object']);
+        $this->allParameters = new ParameterBag($data);
     }
 
     public function process(): void
     {
-        if ($this->parameters->get('type') === Event::PAYMENT_INTENT_CREATED) {
+        if ($this->allParameters->get('type') === Event::PAYMENT_INTENT_CREATED) {
             $this->logHistoryForAttemptId($this->parameters->get('id'), 'Stripe payment created webhook received', $this->parameters->all());
             return;
         }
 
-        if ($this->parameters->get('type') === Event::PAYMENT_INTENT_SUCCEEDED) {
+        if ($this->allParameters->get('type') === Event::PAYMENT_INTENT_SUCCEEDED) {
             $status = $this->payments->getPaymentStatusById(Payments::STATUS_COMPLETED);
             $payment = $this->payments->getPaymentByProviderId($this->parameters->get('id'));
             $this->logHistoryForAttemptId($this->parameters->get('id'), 'Stripe payment succeeded webhook received', $this->parameters->all(), $status);
@@ -42,7 +44,7 @@ class StripeWebhookProcessor
             }
         }
 
-        if ($this->parameters->get('type') === Event::PAYMENT_INTENT_PAYMENT_FAILED) {
+        if ($this->allParameters->get('type') === Event::PAYMENT_INTENT_PAYMENT_FAILED) {
             $status = $this->payments->getPaymentStatusById(Payments::STATUS_FAILED);
             $payment = $this->payments->getPaymentByProviderId($this->parameters->get('id'));
             $this->logHistoryForAttemptId($this->parameters->get('id'), 'Stripe payment failed webhook received', $this->parameters->all(), $status);
@@ -54,7 +56,7 @@ class StripeWebhookProcessor
             }
         }
 
-        if ($this->parameters->get('type') === Event::SETUP_INTENT_SUCCEEDED) {
+        if ($this->allParameters->get('type') === Event::SETUP_INTENT_SUCCEEDED) {
             $id = $this->parameters->get('id');
             $mandate = $this->payments->getMandateByReference($id);
             if ($mandate) {
@@ -71,7 +73,7 @@ class StripeWebhookProcessor
             }
         }
 
-        if ($this->parameters->get('type') === Event::REFUND_CREATED) {
+        if ($this->allParameters->get('type') === Event::REFUND_CREATED) {
             $id = $this->parameters->get('payment_intent');
             $payment = $this->payments->getPaymentByProviderId($id);
             if ($payment) {
