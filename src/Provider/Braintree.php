@@ -11,6 +11,9 @@ use Pantono\Payments\Model\PaymentMandate;
 use Braintree\CustomerSearch;
 use Pantono\Customers\Customers;
 use Braintree\Result\Error;
+use Pantono\Payments\Model\PaymentWebhook;
+use Symfony\Component\HttpFoundation\ParameterBag;
+use Pantono\Payments\Exception\RefundFailedException;
 
 class Braintree extends AbstractProvider
 {
@@ -31,7 +34,10 @@ class Braintree extends AbstractProvider
 
     public function chargeMandate(PaymentMandate $mandate, int $amountInPence, string $description): Payment
     {
-        if ($mandate->getStatus()->isActive() === false) {
+        if (!$mandate->getStatus() || $mandate->getStatus()->isActive() === false) {
+            throw new \RuntimeException('Mandate is not available to charge');
+        }
+        if ($mandate->getPaymentGateway() === null) {
             throw new \RuntimeException('Mandate is not available to charge');
         }
         $status = $this->payments->getPaymentStatusById(Payments::STATUS_PENDING);
@@ -58,7 +64,9 @@ class Braintree extends AbstractProvider
         $payment->setDateCreated(new \DateTimeImmutable());
         $payment->setDateUpdated(new \DateTimeImmutable());
         $payment->setAmount($amountInPence);
-        $payment->setGateway($mandate->getPaymentGateway());
+        if ($mandate->getPaymentGateway()) {
+            $payment->setGateway($mandate->getPaymentGateway());
+        }
         $status = $this->payments->getPaymentStatusById(Payments::STATUS_PENDING);
         if ($status) {
             $payment->setStatus($status);
@@ -130,29 +138,9 @@ class Braintree extends AbstractProvider
         }
         $result = $this->createClient()->transaction()->sale($saleParams);
         if ($result instanceof Successful) {
-            $status = $this->payments->getPaymentStatusById(Payments::STATUS_COMPLETED);
-            if ($status) {
-                $payment->setStatus($status);
-            }
-            $payment->setProviderId($result->transaction->id);
-            $payment->setResponseData($result->transaction->toArray());
-            foreach ($result->transaction->statusHistory as $item) {
-                $this->payments->addHistoryToPayment($payment, 'Braintree: ' . $item->status, $item->toArray(), $item->timestamp);
-            }
-            $payment->setCardData($result->transaction->creditCardDetails->toArray());
-            $payment->setPaymentMethodName($result->transaction->creditCardDetails->maskedNumber);
-            $payment->setAuthCode($result->transaction->paymentReceipt->processorAuthorizationCode);;
-            $payment->setCurrency($result->transaction->currencyIsoCode);
-            $this->payments->savePayment($payment);
+            $this->updatePaymentSuccess($payment, $result);
         } else {
-            if ($payment->getStatus()->getId() !== Payments::STATUS_COMPLETED) {
-                $status = $this->payments->getPaymentStatusById(Payments::STATUS_FAILED);
-                if ($status) {
-                    $payment->setStatus($status);
-                }
-                $payment->setResponseData($result->toArray());
-                $this->payments->savePayment($payment);
-            }
+            $this->updatePaymentError($payment, $result);
         }
         return $payment;
     }
@@ -187,9 +175,11 @@ class Braintree extends AbstractProvider
             $this->customers->saveCustomer($customer);
             $braintreeId = $customer->getExternalIdByType('braintree');
         }
-        $token = $this->createClient()->clientToken()->generate([
-            'customerId' => $braintreeId->getIdentifier()
-        ]);
+        $params = [];
+        if ($braintreeId && $braintreeId->getIdentifier()) {
+            $params['customerId'] = $braintreeId->getIdentifier();
+        }
+        $token = $this->createClient()->clientToken()->generate($params);
         $mandate->setDataValue('token', $token);
         $this->payments->saveMandate($mandate);
     }
@@ -230,6 +220,70 @@ class Braintree extends AbstractProvider
             $mandate->setResponseData($result->paymentMethod->toArray());
         }
         $this->payments->saveMandate($mandate);
+    }
+
+    public function ingestWebhook(PaymentWebhook $webhook): void
+    {
+        $data = new ParameterBag($webhook->getData());
+        if (!$data->has('bt_signature') || !$data->has('bt_payload')) {
+            $webhook->setVerified(false);
+            $webhook->setProcessed(false);
+            return;
+        }
+        $output = $this->createClient()->webhookNotification()->parse($data->get('bt_signature'), $data->get('bt_payload'));
+        $webhook->setDecodedData($output->toArray());
+        $this->payments->saveWebhook($webhook);
+    }
+
+    public function performRefund(Payment $payment, int $amountInPence): void
+    {
+        $parent = $payment->getParentPayment();
+        if ($parent && $parent->getProviderId()) {
+            if ($amountInPence === 0) {
+                $result = $this->createClient()->transaction()->refund($parent->getProviderId(), (string)($amountInPence / 100));
+            } else {
+                $result = $this->createClient()->transaction()->refund($parent->getProviderId());
+            }
+            if ($result instanceof Successful) {
+                $this->updatePaymentSuccess($payment, $result);
+            } else {
+                $failedStatus = $this->payments->getPaymentStatusById(Payments::STATUS_FAILED);
+                if ($failedStatus) {
+                    $payment->setStatus($failedStatus);
+                }
+                $payment->setResponseData(['error' => $result->getMessage()]);
+                $this->payments->savePayment($payment);
+                throw new RefundFailedException($result->getMessage());
+            }
+        }
+    }
+
+    private function updatePaymentSuccess(Payment $payment, Successful $result): void
+    {
+        $status = $this->payments->getPaymentStatusById(Payments::STATUS_COMPLETED);
+        if ($status) {
+            $payment->setStatus($status);
+        }
+        $payment->setProviderId($result->transaction->id);
+        $payment->setResponseData($result->transaction->toArray());
+        foreach ($result->transaction->statusHistory as $item) {
+            $this->payments->addHistoryToPayment($payment, 'Braintree: ' . $item->status, $item->toArray(), $item->timestamp);
+        }
+        $payment->setCardData($result->transaction->creditCardDetails->toArray());
+        $payment->setPaymentMethodName($result->transaction->creditCardDetails->maskedNumber);
+        $payment->setAuthCode($result->transaction->paymentReceipt->processorAuthorizationCode);;
+        $payment->setCurrency($result->transaction->currencyIsoCode);
+        $this->payments->savePayment($payment);
+    }
+
+    private function updatePaymentError(Payment $payment, Error $error): void
+    {
+        $status = $this->payments->getPaymentStatusById(Payments::STATUS_FAILED);
+        if ($status) {
+            $payment->setStatus($status);
+        }
+        $payment->setResponseData($error->toArray());
+        $this->payments->savePayment($payment);
     }
 
     private function findCustomerRecord(string $email): ?string

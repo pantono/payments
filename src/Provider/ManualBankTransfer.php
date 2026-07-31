@@ -3,6 +3,7 @@
 namespace Pantono\Payments\Provider;
 
 use Pantono\Payments\Model\Payment;
+use Pantono\Payments\Model\PaymentWebhook;
 
 class ManualBankTransfer extends AbstractProvider
 {
@@ -19,5 +20,15 @@ class ManualBankTransfer extends AbstractProvider
     public function handleResponse(array $data): ?Payment
     {
         return null;
+    }
+
+    public function performRefund(Payment $payment, int $amountInPence): void
+    {
+        // TODO: Implement performRefund() method.
+    }
+
+    public function ingestWebhook(PaymentWebhook $webhook): void
+    {
+        //no-op
     }
 }

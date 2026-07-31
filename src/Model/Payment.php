@@ -45,6 +45,10 @@ class Payment
      */
     #[OneToMany(targetModel: PaymentHistory::class, mappedBy: 'payment_id')]
     private array $history = [];
+    #[OneToOne(targetModel: Payment::class), FieldName('parent_payment_id')]
+    private ?Payment $parentPayment = null;
+    #[OneToMany(targetModel: Payment::class, mappedBy: 'parent_payment_id')]
+    private array $relatedPayments = [];
 
     public function getId(): ?int
     {
@@ -221,6 +225,39 @@ class Payment
         $this->data[$name] = $value;
     }
 
+    public function getParentPayment(): ?Payment
+    {
+        return $this->parentPayment;
+    }
+
+    public function setParentPayment(?Payment $parentPayment): void
+    {
+        $this->parentPayment = $parentPayment;
+    }
+
+    public function getRelatedPayments(): array
+    {
+        return $this->relatedPayments;
+    }
+
+    public function setRelatedPayments(array $relatedPayments): void
+    {
+        $this->relatedPayments = $relatedPayments;
+    }
+
+    public function addRelatedPayment(Payment $payment): void
+    {
+        if ($payment->getId() === $this->getId()) {
+            return;
+        }
+        foreach ($this->getRelatedPayments() as $relatedPayment) {
+            if ($relatedPayment->getId() === $payment->getId()) {
+                return;
+            }
+        }
+        $this->relatedPayments[] = $payment;
+    }
+
     public function getDataField(string $string): mixed
     {
         return $this->data[$string] ?? null;
@@ -247,5 +284,14 @@ class Payment
             }
         }
         return $number;
+    }
+
+    public function getTotalAmount(): float
+    {
+        $amount = $this->getAmount();
+        foreach ($this->getRelatedPayments() as $payment) {
+            $amount += $payment->getAmount();
+        }
+        return $amount;
     }
 }

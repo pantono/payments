@@ -37,6 +37,7 @@ class Payments
     public const STATUS_FAILED = 3;
     public const STATUS_CHARGEBACK = 4;
     public const STATUS_REFUNDED = 5;
+    public const STATUS_PART_REFUNDED = 6;
     public const MANDATE_STATUS_PENDING = 1;
     public const MANDATE_STATUS_ACTIVE = 2;
     public const MANDATE_STATUS_CANCELLED = 3;
@@ -229,6 +230,28 @@ class Payments
         $this->dispatcher->dispatch($event);
         $this->saveWebhook($webhook);
         return $webhook;
+    }
+
+    public function refundPayment(Payment $payment, int $amountInPence, bool $processWithGateway = true): Payment
+    {
+        $amountInPence = abs($amountInPence);
+        $refund = new Payment();
+        $refund->setDateCreated(new \DateTimeImmutable());
+        $refund->setDateUpdated(new \DateTimeImmutable());
+        $refund->setGateway($payment->getGateway());
+        $refund->setAmount((int)('-' . $amountInPence));
+        $refund->setCurrency($payment->getCurrency());
+        $refund->setReference($this->getAvailableToken());
+        $pendingStatus = $this->getPaymentStatusById(self::STATUS_PENDING);
+        if ($pendingStatus) {
+            $refund->setStatus($pendingStatus);
+        }
+        $refund->setParentPayment($payment);
+        $this->savePayment($payment);
+        if ($processWithGateway) {
+            $this->getProviderController($payment->getGateway())->performRefund($payment, $amountInPence);
+        }
+        return $refund;
     }
 
     public function addHistoryToPayment(Payment $payment, string $entry, array $data = [], ?\DateTimeInterface $date = null): void

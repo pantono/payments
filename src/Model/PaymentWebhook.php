@@ -28,6 +28,12 @@ class PaymentWebhook
     private bool $verified = false;
     #[NoSave]
     private ?Request $request = null;
+    /**
+     * @var array<string,mixed>
+     */
+    #[Filter('json_decode')]
+    private ?array $decodedData = null;
+    private ?string $error = null;
 
     public function getId(): ?int
     {
@@ -122,5 +128,28 @@ class PaymentWebhook
     public function setVerified(bool $verified): void
     {
         $this->verified = $verified;
+    }
+
+    /**
+     * @return mixed[]|null
+     */
+    public function getDecodedData(): ?array
+    {
+        return $this->decodedData;
+    }
+
+    public function setDecodedData(?array $decodedData): void
+    {
+        $this->decodedData = $decodedData;
+    }
+
+    public function getError(): ?string
+    {
+        return $this->error;
+    }
+
+    public function setError(?string $error): void
+    {
+        $this->error = $error;
     }
 }

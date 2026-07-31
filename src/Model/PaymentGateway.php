@@ -67,7 +67,7 @@ class PaymentGateway
         return $settings[$name] ?? $default;
     }
 
-    public function getInterpolatedSettings()
+    public function getInterpolatedSettings(): array
     {
         $settings = $this->getSettings();
         return ApplicationHelper::interpolateEnv($settings);

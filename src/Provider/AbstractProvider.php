@@ -8,7 +8,7 @@ use Pantono\Payments\Model\PaymentGateway;
 use Pantono\Payments\Model\PaymentMandate;
 use Pantono\Payments\Exception\GatewayDoesNotSupportMandates;
 use Pantono\Config\Config;
-use Symfony\Component\HttpFoundation\Request;
+use Pantono\Payments\Model\PaymentWebhook;
 
 abstract class AbstractProvider
 {
@@ -20,7 +20,11 @@ abstract class AbstractProvider
 
     abstract public function initiate(Payment $payment): void;
 
+    abstract public function performRefund(Payment $payment, int $amountInPence): void;
+
     abstract public function handleResponse(array $data): ?Payment;
+
+    abstract public function ingestWebhook(PaymentWebhook $webhook): void;
 
     public function chargeMandate(PaymentMandate $mandate, int $amountInPence, string $description): Payment
     {

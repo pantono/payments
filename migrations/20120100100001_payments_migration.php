@@ -39,7 +39,8 @@ final class PaymentsMigration extends BasePantonoMigration
             ['id' => 2, 'name' => 'Completed', 'completed' => 1, 'pending' => 0, 'failed' => 0, 'refund' => 0],
             ['id' => 3, 'name' => 'Failed', 'completed' => 0, 'pending' => 0, 'failed' => 1, 'refund' => 0],
             ['id' => 4, 'name' => 'Chargeback', 'completed' => 0, 'pending' => 0, 'failed' => 1, 'refund' => 0],
-            ['id' => 5, 'name' => 'Refunded', 'completed' => 0, 'pending' => 0, 'failed' => 1, 'refund' => 1],
+            ['id' => 5, 'name' => 'Refunded', 'completed' => 0, 'pending' => 0, 'failed' => 0, 'refund' => 1],
+            ['id' => 6, 'name' => 'Part Refunded', 'completed' => 0, 'pending' => 0, 'failed' => 0, 'refund' => 1],
         ]);
 
         $this->tablePrefix('payment_mandate_status')
@@ -80,7 +81,7 @@ final class PaymentsMigration extends BasePantonoMigration
             ->addColumn('request_data', 'json')
             ->addLinkedColumn('gateway_id', $this->addTablePrefix('payment_gateway'), 'id')
             ->addLinkedColumn('mandate_id', $this->addTablePrefix('payment_mandate'), 'id', ['null' => true])
-            ->addLinkedColumn('provider_id', $this->addTablePrefix('payment_provider'), 'id', ['null' => true])
+            ->addColumn('provider_id', 'string', ['null' => true])
             ->addLinkedColumn('status_id', $this->addTablePrefix('payment_status'), 'id')
             ->addColumn('reference', 'string', ['null' => true])
             ->addColumn('currency', 'string', ['null' => true])
@@ -94,6 +95,7 @@ final class PaymentsMigration extends BasePantonoMigration
             ->addColumn('data', 'json')
             ->addColumn('redirect_url', 'string', ['null' => true])
             ->addIndex('reference', ['unique' => true])
+            ->addIndex('provider_id')
             ->addLinkedColumn('parent_payment_id', $this->addTablePrefix('payment'), 'id', ['null' => true])
             ->create();
 

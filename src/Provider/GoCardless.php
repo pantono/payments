@@ -6,17 +6,10 @@ use Pantono\Payments\Model\Payment;
 use Pantono\Payments\Exception\GatewayDoesNotSupportOneOffPayments;
 use Pantono\Payments\Model\PaymentMandate;
 use GoCardlessPro\Client;
-use Pantono\Customers\Customers;
+use Pantono\Payments\Model\PaymentWebhook;
 
 class GoCardless extends AbstractProvider
 {
-    private Customers $customers;
-
-    public function __construct(Customers $customers)
-    {
-        $this->customers = $customers;
-    }
-
     private ?Client $client = null;
 
     public function supportsRecurring(): bool
@@ -53,7 +46,7 @@ class GoCardless extends AbstractProvider
 
     public function processMandate(PaymentMandate $mandate, array $data): void
     {
-        dd($data);
+        throw new \RuntimeException('Not yet implemented');
     }
 
     private function getClient(): Client
@@ -65,5 +58,15 @@ class GoCardless extends AbstractProvider
             ]);
         }
         return $this->client;
+    }
+
+    public function performRefund(Payment $payment, int $amountInPence): void
+    {
+        throw new \RuntimeException('Not yet implemented');
+    }
+
+    public function ingestWebhook(PaymentWebhook $webhook): void
+    {
+        throw new \RuntimeException('Not yet implemented');
     }
 }

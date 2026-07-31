@@ -5,22 +5,17 @@ namespace Pantono\Payments\Provider;
 use Pantono\Payments\Model\Payment;
 use Pantono\Payments\Model\PaymentMandate;
 use Stripe\StripeClient;
-use Pantono\Utilities\ApplicationHelper;
 use Pantono\Payments\Repository\StripeRepository;
 use Pantono\Payments\Payments;
 use Pantono\Payments\Model\PaymentWebhook;
-use Pantono\Core\Application\WebApplication;
-use Symfony\Component\EventDispatcher\EventDispatcher;
-use Pantono\Payments\Event\PaymentWebhookEvent;
 use Pantono\Hydrator\Hydrator;
 use Stripe\PaymentIntent;
-use http\Env\Request;
 use Stripe\Webhook;
 use Stripe\Exception\SignatureVerificationException;
-use Twilio\TwiML\Voice\Pay;
 use Pantono\Customers\Customers;
-use Stripe\PaymentMethod;
 use Stripe\Exception\ApiErrorException;
+use Stripe\Event;
+use Pantono\Payments\Provider\Stripe\StripeWebhookProcessor;
 
 class Stripe extends AbstractProvider
 {
@@ -126,7 +121,7 @@ class Stripe extends AbstractProvider
 
     public function chargeMandate(PaymentMandate $mandate, int $amountInPence, string $description = 'Recurring charge'): Payment
     {
-        if ($mandate->getStatus()->isActive() === false) {
+        if (!$mandate->getStatus() || $mandate->getStatus()->isActive() === false) {
             throw new \RuntimeException('Mandate is not available to charge');
         }
         $status = $this->payments->getPaymentStatusById(Payments::STATUS_PENDING);
@@ -179,22 +174,74 @@ class Stripe extends AbstractProvider
         $this->payments->saveMandate($mandate);
     }
 
-    public function verifyWebhook(PaymentWebhook $webhook): bool
+    public function verifyWebhook(PaymentWebhook $webhook): ?Event
     {
         if ($webhook->getRequest()) {
             $secret = $this->getGateway()->getSetting('webhook_secret');
             if ($secret) {
                 if ($sig = $webhook->getRequest()->headers->get('stripe-signature')) {
                     try {
-                        Webhook::constructEvent($webhook->getRequest()->getContent(), $sig, $secret);
+                        return Webhook::constructEvent($webhook->getRequest()->getContent(), $sig, $secret);
                     } catch (SignatureVerificationException $e) {
-                        return false;
+                        return null;
                     }
                 }
             }
         }
-        return true;
+        return null;
     }
+
+    public function ingestWebhook(PaymentWebhook $webhook): void
+    {
+        if ($webhook->getRequest()) {
+            $secret = $this->getGateway()->getSetting('stripe_webhook_secret');
+            if ($secret) {
+                if ($sig = $webhook->getHeader('stripe-signature')) {
+                    try {
+                        $event = Webhook::constructEvent($webhook->getRequest()->getContent(), $sig, $secret);
+                        $webhook->setVerified(true);
+                        $webhook->setDecodedData($event->toArray());
+                        $this->payments->saveWebhook($webhook);
+                        $processor = new StripeWebhookProcessor($this->payments, $event);
+                        $processor->process();
+                    } catch (SignatureVerificationException $e) {
+                        $webhook->setVerified(false);
+                        $webhook->setProcessed(true);
+                        $webhook->setError($e->getMessage());
+                        $this->payments->saveWebhook($webhook);
+                    }
+                } else {
+                    $webhook->setVerified(false);
+                    $webhook->setError('No signature header present');
+                    $this->payments->saveWebhook($webhook);
+                }
+            }
+        }
+    }
+
+    public function performRefund(Payment $payment, int $amountInPence): void
+    {
+        $output = $this->getClient()->refunds->create([
+            'payment_intent' => $payment->getProviderId(),
+            'amount' => $amountInPence,
+        ]);
+        $statusId = Payments::STATUS_PENDING;
+        if ($output->status === 'succeeded') {
+            $statusId = Payments::STATUS_COMPLETED;
+        }
+        if ($output->status === 'failed' || $output->status === 'cancelled') {
+            $statusId = Payments::STATUS_FAILED;
+        }
+        $status = $this->payments->getPaymentStatusById($statusId);
+        if (!$status) {
+            throw new \RuntimeException('Payment status not found');
+        }
+        $payment->setProviderId($output->id);
+        $payment->setStatus($status);
+        $payment->setResponseData($output->toArray());
+        $this->payments->savePayment($payment);
+    }
+
 
     private function getClient(): StripeClient
     {
@@ -218,14 +265,11 @@ class Stripe extends AbstractProvider
     {
         try {
             $method = $this->getClient()->paymentMethods->retrieve($id);
-            if ($method instanceof PaymentMethod) {
-                $card = $method->card;
-                if ($method->card) {
-                    //@phpstan-ignore-next-line
-                    return $method->card->display_brand . ' ending ' . $method->card->last4;
-                }
-                return $method->type;
+            if ($method->card) {
+                //@phpstan-ignore-next-line
+                return $method->card->display_brand . ' ending ' . $method->card->last4;
             }
+            return $method->type;
         } catch (ApiErrorException $e) {
 
         }
