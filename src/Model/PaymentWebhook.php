@@ -100,6 +100,15 @@ class PaymentWebhook
         return $this->headers[$name] ?? null;
     }
 
+    public function getSingleHeader(string $name): mixed
+    {
+        $header = $this->getHeader($name);
+        if (is_array($header) && isset($header[0])) {
+            return $header[0];
+        }
+        return $header;
+    }
+
     public function isProcessed(): bool
     {
         return $this->processed;

@@ -208,7 +208,7 @@ class Stripe extends AbstractProvider
         if ($webhook->getRequest()) {
             $secret = $this->getGateway()->getSetting('stripe_webhook_secret');
             if ($secret) {
-                if ($sig = $webhook->getHeader('stripe-signature')) {
+                if ($sig = $webhook->getSingleHeader('stripe-signature')) {
                     try {
                         $event = Webhook::constructEvent($webhook->getRequest()->getContent(), $sig, $secret);
                         $webhook->setVerified(true);
