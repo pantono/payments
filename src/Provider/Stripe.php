@@ -40,15 +40,20 @@ class Stripe extends AbstractProvider
 
     public function initiate(Payment $payment): void
     {
+        $currency = $payment->getCurrency();
+        if (!$currency) {
+            $currency = 'GBP';
+        }
         $params = [
-            'currency' => $payment->getCurrency(),
+            'currency' => $currency,
             'amount' => $payment->getAmount()
         ];
         if ($payment->getDataField('description')) {
             $params['statement_descriptor'] = $payment->getDataField('description');
         }
         if ($payment->getDataField('metadata')) {
-            $params['metadata'] = $payment->getDataField('metadata');
+            $meta = json_decode($payment->getDataField('metadata'), true, 512, JSON_THROW_ON_ERROR);
+            $params['metadata'] = $meta;
         }
         $intent = $this->getClient()->paymentIntents->create($params);
         $payment->setProviderId($intent->id);
@@ -90,16 +95,23 @@ class Stripe extends AbstractProvider
             $customerId = $customer->getExternalIdByType('stripe');
             if (!$customerId) {
                 $details = $customer->getDetails();
-                if ($details) {
-                    $stripeCustomer = $this->getClient()->customers->create([
-                        'email' => $details->getEmail(),
-                        'name' => $details->getForename() . ' ' . $details->getSurname(),
-                        'metadata' => [
-                            'customer_id' => $customer->getId()
-                        ]
-                    ]);
-                    $customer->updateExternalId('stripe', $stripeCustomer->id);
-                    $this->customers->saveCustomer($customer);
+                if ($details && $customer->getId()) {
+                    $params = [];
+                    if ($details->getForename() && $details->getSurname()) {
+                        $params['name'] = $details->getForename() . ' ' . $details->getSurname();
+                    } elseif ($details->getForename()) {
+                        $params['name'] = $details->getForename();
+                    } elseif ($details->getSurname()) {
+                        $params['name'] = $details->getSurname();
+                    }
+                    if ($details->getEmail()) {
+                        $params['email'] = $details->getEmail();
+                    }
+                    if (!empty($params)) {
+                        $stripeCustomer = $this->getClient()->customers->create($params);
+                        $customer->updateExternalId('stripe', $stripeCustomer->id);
+                        $this->customers->saveCustomer($customer);
+                    }
                 }
             }
             $stripeId = $customer->getExternalIdByType('stripe');
@@ -129,6 +141,9 @@ class Stripe extends AbstractProvider
             throw new \RuntimeException('Payment status not set');
         }
         $customerId = $mandate->getCustomer()?->getExternalIdByType('stripe')?->getIdentifier();
+        if (!$customerId) {
+            throw new \RuntimeException('Stripe customer id not found');
+        }
         $methodId = $this->getClient()->paymentMethods->retrieve($mandate->getResponseData()['payment_method']);
         $methodName = $this->getPaymentMethodNameFromId($methodId);
         $response = $this->getClient()->paymentIntents->create([
@@ -138,10 +153,7 @@ class Stripe extends AbstractProvider
             'payment_method' => $mandate->getResponseData()['payment_method'],
             'off_session' => true,
             'confirm' => true,
-            'description' => $description,
-            'metadata' => [
-                'order_id' => 'ORDER-123', // Your internal reference
-            ],
+            'description' => $description
         ]);
         $payment = new Payment();
         $payment->setAmount($amountInPence);
@@ -221,6 +233,9 @@ class Stripe extends AbstractProvider
 
     public function performRefund(Payment $payment, int $amountInPence): void
     {
+        if (!$payment->getProviderId()) {
+            throw new \RuntimeException('Payment provider id not found');
+        }
         $output = $this->getClient()->refunds->create([
             'payment_intent' => $payment->getProviderId(),
             'amount' => $amountInPence,
@@ -266,7 +281,6 @@ class Stripe extends AbstractProvider
         try {
             $method = $this->getClient()->paymentMethods->retrieve($id);
             if ($method->card) {
-                //@phpstan-ignore-next-line
                 return $method->card->display_brand . ' ending ' . $method->card->last4;
             }
             return $method->type;
