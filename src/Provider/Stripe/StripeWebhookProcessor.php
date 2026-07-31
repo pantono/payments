@@ -11,7 +11,6 @@ class StripeWebhookProcessor
 {
     private Payments $payments;
     private ParameterBag $parameters;
-    private ParameterBag $allParameters;
     private Event $event;
 
     public function __construct(Payments $payments, Event $event)
@@ -22,7 +21,6 @@ class StripeWebhookProcessor
             throw new \RuntimeException('Invalid Stripe event data');
         }
         $this->parameters = new ParameterBag($data['data']['object']);
-        $this->allParameters = new ParameterBag($data);
         $this->event = $event;
     }
 
@@ -109,7 +107,12 @@ class StripeWebhookProcessor
 
     private function getCardData(array $charge): array
     {
-        return $charge['payment_method_details']['card'] ?? [];
+        $cardData = $charge['payment_method_details']['card'] ?? [];
+        if (!is_array($cardData)) {
+            return [];
+        }
+
+        return $cardData;
     }
 
     private function getPaymentMethodName(array $cardData): ?string
