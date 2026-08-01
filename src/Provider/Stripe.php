@@ -16,6 +16,7 @@ use Pantono\Customers\Customers;
 use Stripe\Exception\ApiErrorException;
 use Stripe\Event;
 use Pantono\Payments\Provider\Stripe\StripeWebhookProcessor;
+use Pantono\Logger\Logger;
 
 class Stripe extends AbstractProvider
 {
@@ -23,12 +24,14 @@ class Stripe extends AbstractProvider
     private StripeRepository $repository;
     private Hydrator $hydrator;
     private Customers $customers;
+    private Logger $logger;
 
-    public function __construct(StripeRepository $repository, Hydrator $hydrator, Customers $customers)
+    public function __construct(StripeRepository $repository, Hydrator $hydrator, Customers $customers, Logger $logger)
     {
         $this->repository = $repository;
         $this->hydrator = $hydrator;
         $this->customers = $customers;
+        $this->logger = $logger;
     }
 
     private ?StripeClient $client = null;
@@ -261,6 +264,8 @@ class Stripe extends AbstractProvider
     private function getClient(): StripeClient
     {
         if (!$this->client) {
+            $logger = $this->logger->createDatabaseLogger('stripe');
+            \Stripe\Stripe::setLogger($logger);
             foreach (['stripe_version', 'client_id', 'api_key', 'stripe_account'] as $variable) {
                 $setting = $this->getGateway()->getSetting($variable);
                 if ($setting !== null) {
