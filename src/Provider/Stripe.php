@@ -90,6 +90,7 @@ class Stripe extends AbstractProvider
         }
         try {
             $intent = $this->getClient()->paymentIntents->retrieve($payment->getProviderId());
+            $payment->setDateUpdated(new \DateTimeImmutable());
             if ($intent->status === 'succeeded') {
                 $status = $this->payments->getPaymentStatusById(Payments::STATUS_COMPLETED);
                 if ($status) {

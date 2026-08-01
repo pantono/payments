@@ -14,6 +14,7 @@ use Braintree\Result\Error;
 use Pantono\Payments\Model\PaymentWebhook;
 use Symfony\Component\HttpFoundation\ParameterBag;
 use Pantono\Payments\Exception\RefundFailedException;
+use Braintree\Transaction;
 
 class Braintree extends AbstractProvider
 {
@@ -35,7 +36,13 @@ class Braintree extends AbstractProvider
 
     public function updatePaymentDetails(Payment $payment): void
     {
-        // TODO: Implement updatePaymentDetails() method.
+        if (!$payment->getProviderId()) {
+            return;
+        }
+        $transaction = $this->createClient()->transaction()->find($payment->getProviderId());
+        if ($transaction instanceof Transaction) {
+            $this->updatePaymentSuccess($payment, $transaction);
+        }
     }
 
     public function chargeMandate(PaymentMandate $mandate, int $amountInPence, string $description): Payment
@@ -144,7 +151,7 @@ class Braintree extends AbstractProvider
         }
         $result = $this->createClient()->transaction()->sale($saleParams);
         if ($result instanceof Successful) {
-            $this->updatePaymentSuccess($payment, $result);
+            $this->updatePaymentSuccess($payment, $result->transaction);
         } else {
             $this->updatePaymentError($payment, $result);
         }
@@ -251,7 +258,7 @@ class Braintree extends AbstractProvider
                 $result = $this->createClient()->transaction()->refund($parent->getProviderId());
             }
             if ($result instanceof Successful) {
-                $this->updatePaymentSuccess($payment, $result);
+                $this->updatePaymentSuccess($payment, $result->transaction);
             } else {
                 $failedStatus = $this->payments->getPaymentStatusById(Payments::STATUS_FAILED);
                 if ($failedStatus) {
@@ -264,21 +271,21 @@ class Braintree extends AbstractProvider
         }
     }
 
-    private function updatePaymentSuccess(Payment $payment, Successful $result): void
+    private function updatePaymentSuccess(Payment $payment, Transaction $transaction): void
     {
         $status = $this->payments->getPaymentStatusById(Payments::STATUS_COMPLETED);
         if ($status) {
             $payment->setStatus($status);
         }
-        $payment->setProviderId($result->transaction->id);
-        $payment->setResponseData($result->transaction->toArray());
-        foreach ($result->transaction->statusHistory as $item) {
+        $payment->setProviderId($transaction->id);
+        $payment->setResponseData($transaction->toArray());
+        foreach ($transaction->statusHistory as $item) {
             $this->payments->addHistoryToPayment($payment, 'Braintree: ' . $item->status, $item->toArray(), $item->timestamp);
         }
-        $payment->setCardData($result->transaction->creditCardDetails->toArray());
-        $payment->setPaymentMethodName($result->transaction->creditCardDetails->maskedNumber);
-        $payment->setAuthCode($result->transaction->paymentReceipt->processorAuthorizationCode);;
-        $payment->setCurrency($result->transaction->currencyIsoCode);
+        $payment->setCardData($transaction->creditCardDetails->toArray());
+        $payment->setPaymentMethodName($transaction->creditCardDetails->maskedNumber);
+        $payment->setAuthCode($transaction->paymentReceipt->processorAuthorizationCode);;
+        $payment->setCurrency($transaction->currencyIsoCode);
         $this->payments->savePayment($payment);
     }
 
