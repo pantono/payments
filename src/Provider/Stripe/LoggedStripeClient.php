@@ -27,7 +27,7 @@ class LoggedStripeClient implements StripeClientInterface
         if (strtolower($method) === 'get') {
             $options['query'] = $params;
         } elseif ($params !== null) {
-            $options['body'] = $params;
+            $options['form_params'] = $params;
         }
 
         $response = $this->client->request($method, $absUrl, $options);
