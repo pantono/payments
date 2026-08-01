@@ -7,6 +7,8 @@ use Pantono\Payments\Model\PaymentWebhook;
 
 class ManualBankTransfer extends AbstractProvider
 {
+    public const int PROVIDER_ID = 4;
+
     public function supportsRecurring(): bool
     {
         return false;

@@ -97,8 +97,8 @@ class Stripe extends AbstractProvider
                 }
                 if ($intent->latest_charge) {
                     $charge = $this->getClient()->charges->retrieve($intent->latest_charge);
-                    if ($charge->payment_method_details) {
-                        $cardData = $charge->payment_method_details->toArray();
+                    if ($charge->payment_method_details->card) {
+                        $cardData = $charge->payment_method_details->card->toArray();
                         $brand = $cardData['display_brand'] ?? $cardData['brand'] ?? null;
                         $last4 = $cardData['last4'] ?? null;
                         if ($brand && $last4) {
@@ -106,8 +106,12 @@ class Stripe extends AbstractProvider
                         } else {
                             $payment->setPaymentMethodName($brand);
                         }
+                        $payment->setCardData($cardData);
+                        $code = $cardData['authorization_code'] ?? null;
+                        if ($code) {
+                            $payment->setAuthCode($code);
+                        }
                     }
-                    $payment->setAuthCode($charge->authorization_code);
                 }
             }
             if ($intent->status === 'failed') {

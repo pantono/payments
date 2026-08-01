@@ -10,6 +10,7 @@ use Pantono\Payments\Model\PaymentWebhook;
 
 class GoCardless extends AbstractProvider
 {
+    public const int PROVIDER_ID = 3;
     private ?Client $client = null;
 
     public function supportsRecurring(): bool

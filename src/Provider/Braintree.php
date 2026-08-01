@@ -17,6 +17,7 @@ use Pantono\Payments\Exception\RefundFailedException;
 
 class Braintree extends AbstractProvider
 {
+    public const int PROVIDER_ID = 2;
     private Session $session;
     private Customers $customers;
     private ?Gateway $gateway = null;
