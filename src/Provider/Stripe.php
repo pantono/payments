@@ -43,7 +43,7 @@ class Stripe extends AbstractProvider
         return true;
     }
 
-    public function initiate(Payment $payment): void
+    public function initiatePayment(Payment $payment): void
     {
         $currency = $payment->getCurrency();
         if (!$currency) {
@@ -78,9 +78,48 @@ class Stripe extends AbstractProvider
         return null;
     }
 
-    public function handleResponse(array $data): ?Payment
+    public function handleResponseData(array $data): ?Payment
     {
         return null;
+    }
+
+    public function updatePaymentDetails(Payment $payment): void
+    {
+        if (!$payment->getProviderId()) {
+            return;
+        }
+        try {
+            $intent = $this->getClient()->paymentIntents->retrieve($payment->getProviderId());
+            if ($intent->status === 'succeeded') {
+                $status = $this->payments->getPaymentStatusById(Payments::STATUS_COMPLETED);
+                if ($status) {
+                    $payment->setStatus($status);
+                }
+                if ($intent->latest_charge) {
+                    $charge = $this->getClient()->charges->retrieve($intent->latest_charge);
+                    if ($charge->payment_method_details) {
+                        $cardData = $charge->payment_method_details->toArray();
+                        $brand = $cardData['display_brand'] ?? $cardData['brand'] ?? null;
+                        $last4 = $cardData['last4'] ?? null;
+                        if ($brand && $last4) {
+                            $payment->setPaymentMethodName($brand . ' ending ' . $last4);
+                        } else {
+                            $payment->setPaymentMethodName($brand);
+                        }
+                    }
+                    $payment->setAuthCode($charge->authorization_code);
+                }
+            }
+            if ($intent->status === 'failed') {
+                $status = $this->payments->getPaymentStatusById(Payments::STATUS_FAILED);
+                $payment->setResponseData($intent->toArray());
+                if ($status) {
+                    $payment->setStatus($status);
+                }
+            }
+        } catch (ApiErrorException $e) {
+            return;
+        }
     }
 
     public function initiateMandate(PaymentMandate $mandate): void

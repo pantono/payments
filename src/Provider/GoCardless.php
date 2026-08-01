@@ -17,14 +17,19 @@ class GoCardless extends AbstractProvider
         return true;
     }
 
-    public function initiate(Payment $payment): void
+    public function initiatePayment(Payment $payment): void
     {
         throw new GatewayDoesNotSupportOneOffPayments('Cannot support single payments');
     }
 
-    public function handleResponse(array $data): ?Payment
+    public function handleResponseData(array $data): ?Payment
     {
         throw new GatewayDoesNotSupportOneOffPayments('Cannot support single payments');
+    }
+
+    public function updatePaymentDetails(Payment $payment): void
+    {
+        // TODO: Implement updatePaymentDetails() method.
     }
 
     public function initiateMandate(PaymentMandate $mandate): void

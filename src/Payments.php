@@ -124,7 +124,7 @@ class Payments
         $payment->setRequestData($requestData);
         $payment->setStatus($pendingStatus);
         $this->savePayment($payment);
-        $this->getProviderController($gateway)->initiate($payment);
+        $this->getProviderController($gateway)->initiatePayment($payment);
         $this->savePayment($payment);
         return $payment;
     }
@@ -193,6 +193,13 @@ class Payments
         $event->setCurrent($gateway);
         $event->setPrevious($previous);
         $this->dispatcher->dispatch($event);
+    }
+
+    public function updatePaymentDetails(Payment $payment): void
+    {
+        $controller = $this->getProviderController($payment->getGateway());
+        $controller->updatePaymentDetails($payment);
+        $this->savePayment($payment);
     }
 
     public function getProviderController(PaymentGateway $gateway): AbstractProvider

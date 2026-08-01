@@ -12,14 +12,19 @@ class ManualBankTransfer extends AbstractProvider
         return false;
     }
 
-    public function initiate(Payment $payment): void
+    public function initiatePayment(Payment $payment): void
     {
         $this->payments->savePayment($payment);
     }
 
-    public function handleResponse(array $data): ?Payment
+    public function handleResponseData(array $data): ?Payment
     {
         return null;
+    }
+
+    public function updatePaymentDetails(Payment $payment): void
+    {
+        // no-op
     }
 
     public function performRefund(Payment $payment, int $amountInPence): void

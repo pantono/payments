@@ -18,13 +18,15 @@ abstract class AbstractProvider
 
     abstract public function supportsRecurring(): bool;
 
-    abstract public function initiate(Payment $payment): void;
+    abstract public function initiatePayment(Payment $payment): void;
 
     abstract public function performRefund(Payment $payment, int $amountInPence): void;
 
-    abstract public function handleResponse(array $data): ?Payment;
+    abstract public function handleResponseData(array $data): ?Payment;
 
     abstract public function ingestWebhook(PaymentWebhook $webhook): void;
+
+    abstract public function updatePaymentDetails(Payment $payment): void;
 
     public function chargeMandate(PaymentMandate $mandate, int $amountInPence, string $description): Payment
     {

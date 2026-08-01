@@ -32,6 +32,11 @@ class Braintree extends AbstractProvider
         return true;
     }
 
+    public function updatePaymentDetails(Payment $payment): void
+    {
+        // TODO: Implement updatePaymentDetails() method.
+    }
+
     public function chargeMandate(PaymentMandate $mandate, int $amountInPence, string $description): Payment
     {
         if (!$mandate->getStatus() || $mandate->getStatus()->isActive() === false) {
@@ -100,7 +105,7 @@ class Braintree extends AbstractProvider
         return $payment;
     }
 
-    public function initiate(Payment $payment): void
+    public function initiatePayment(Payment $payment): void
     {
         $params = [];
         if ($payment->getDataField('customer_id')) {
@@ -113,7 +118,7 @@ class Braintree extends AbstractProvider
         $this->payments->savePayment($payment);
     }
 
-    public function handleResponse(array $data): ?Payment
+    public function handleResponseData(array $data): ?Payment
     {
         $paymentId = $data['payment_id'] ?? null;
         $paymentMethodNonce = $data['payment_method_nonce'] ?? null;
