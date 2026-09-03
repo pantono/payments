@@ -168,15 +168,19 @@ class Stripe extends AbstractProvider
         if (!$stripeId) {
             throw new \RuntimeException('Customer cannot be created on stripe');
         }
-        $response = $this->getClient()->checkout->sessions->create([
-            'currency' => $mandate->getCurrency(),
+
+        $setupIntent = $this->getClient()->setupIntents->create([
             'customer' => $stripeId->getIdentifier(),
-            'mode' => 'setup',
-            'ui_mode' => 'embedded_page',
-            'return_url' => $returnUrl,
+            'payment_method_types' => ['card'],
+            'usage' => 'off_session'
         ]);
-        $mandate->setDataValue('session_response', $response);
-        $mandate->setReference($response->setup_intent);
+
+        $mandate->setReference($setupIntent->id);
+        $mandate->setDataValue('setup_intent_id', $setupIntent->id);
+        $mandate->setDataValue('client_secret', $setupIntent->client_secret);
+        $mandate->setDataValue('return_url', $returnUrl);
+        $mandate->setResponseData($setupIntent->toArray());
+        $mandate->setDataValue('session_response', $setupIntent->toArray());
         $this->getPayments()->saveMandate($mandate);
     }
 
