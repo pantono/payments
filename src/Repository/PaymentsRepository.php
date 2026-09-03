@@ -141,7 +141,7 @@ class PaymentsRepository extends DefaultRepository
         if (!$customer->getId()) {
             return [];
         }
-        $select = $this->getDb()->select('m')->from('payment_mandate', 'm')
+        $select = $this->getDb()->select('m.*')->from('payment_mandate', 'm')
             ->andWhere('m.customer_id=:customer_id')
             ->setParameter('customer_id', $customer->getId());
 
