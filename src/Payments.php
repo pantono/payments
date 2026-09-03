@@ -26,6 +26,7 @@ use Pantono\Payments\Event\PaymentWebhookEvent;
 use Pantono\Customers\Model\Customer;
 use Pantono\Payments\Filter\PaymentFilter;
 use Pantono\Utilities\StringUtilities;
+use Pantono\Payments\Filter\PaymentMandateFilter;
 
 class Payments
 {
@@ -285,6 +286,14 @@ class Payments
     public function getMandatesForCustomer(Customer $customer): array
     {
         return $this->hydrator->hydrateSet(PaymentMandate::class, $this->repository->getMandatesForCustomer($customer));
+    }
+
+    /**
+     * @return PaymentMandate[]
+     */
+    public function getMandatesByFilter(PaymentMandateFilter $filter): array
+    {
+        return $this->hydrator->hydrateSet(PaymentMandate::class, $this->repository->getMandatesByFilter($filter));
     }
 
     private function getAvailableToken(): string

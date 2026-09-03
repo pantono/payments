@@ -9,6 +9,7 @@ use Pantono\Payments\Model\PaymentWebhook;
 use Pantono\Payments\Filter\PaymentFilter;
 use Pantono\Customers\Model\Customer;
 use Pantono\Database\Repository\DefaultRepository;
+use Pantono\Payments\Filter\PaymentMandateFilter;
 
 class PaymentsRepository extends DefaultRepository
 {
@@ -154,5 +155,30 @@ class PaymentsRepository extends DefaultRepository
             'date' => ($date ?: new \DateTimeImmutable())->format('Y-m-d H:i:s'),
             'data' => json_encode($data)
         ]);
+    }
+
+    public function getMandatesByFilter(PaymentMandateFilter $filter): array
+    {
+        $select = $this->getDb()->select('m.*')->from('payment_mandate', 'm');
+        if ($filter->getCustomer() !== null) {
+            $select->andWhere('m.customer_id=:customer_id')
+                ->setParameter('customer_id', $filter->getCustomer()->getId());
+        }
+        if ($filter->getStatus() !== null) {
+            $select->andWhere('m.status_id=:status_id')
+                ->setParameter('status_id', $filter->getStatus()->getId());
+        }
+        if ($filter->getDateCreatedStart() !== null) {
+            $select->andWhere('m.date_created>=:date_created_start')
+                ->setParameter('date_created_start', $filter->getDateCreatedStart()->format('Y-m-d H:i:s'));
+        }
+
+        if ($filter->getDateCreatedEnd() !== null) {
+            $select->andWhere('m.date_created<=:date_created_end')
+                ->setParameter('date_created_end', $filter->getDateCreatedEnd()->format('Y-m-d H:i:s'));
+        }
+
+        $this->applyCountAndLimit($select, $filter);
+        return $this->getDb()->fetchAll($select);
     }
 }
