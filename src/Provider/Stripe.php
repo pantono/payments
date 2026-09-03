@@ -172,7 +172,7 @@ class Stripe extends AbstractProvider
             'currency' => $mandate->getCurrency(),
             'customer' => $stripeId->getIdentifier(),
             'mode' => 'setup',
-            'ui_mode' => 'embedded',
+            'ui_mode' => 'embedded_page',
             'return_url' => $returnUrl,
         ]);
         $mandate->setDataValue('session_response', $response);
