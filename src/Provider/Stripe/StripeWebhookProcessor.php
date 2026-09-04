@@ -9,6 +9,7 @@ use Symfony\Component\HttpFoundation\ParameterBag;
 use Pantono\Payments\Model\PaymentMandate;
 use Pantono\Customers\Customers;
 use Pantono\Utilities\DateTimeParser;
+use Pantono\Payments\Provider\Stripe;
 
 class StripeWebhookProcessor
 {
@@ -101,10 +102,15 @@ class StripeWebhookProcessor
             if ($this->parameters->get('object') === 'payment_method') {
                 $customer = $this->customers->getCustomerByExternalIdentifier('stripe', $this->parameters->get('customer'));
                 if ($customer) {
+                    $gateways = $this->payments->getGatewaysByProviderId(Stripe::PROVIDER_ID);
+                    if (empty($gateways)) {
+                        throw new \RuntimeException('No stripe providers available');
+                    }
                     $mandate = new PaymentMandate();
                     $mandate->setStartDate(new \DateTimeImmutable());
                     $mandate->setReference($id);
                     $mandate->setSetupData([]);
+                    $mandate->setPaymentGateway($gateways[0]);
                     $mandate->setCurrency('');
                     $card = new ParameterBag($this->parameters->get('card', []));
                     $cardParts = [];
