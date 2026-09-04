@@ -105,6 +105,7 @@ class StripeWebhookProcessor
                     $mandate->setStartDate(new \DateTimeImmutable());
                     $mandate->setReference($id);
                     $mandate->setSetupData([]);
+                    $mandate->setCurrency('');
                     $card = new ParameterBag($this->parameters->get('card', []));
                     $cardParts = [];
                     if ($card->has('brand')) {
