@@ -19,6 +19,9 @@ class PaymentMandateFilter implements PageableInterface
      * @var array<int>
      */
     private ?array $statusIds = [];
+    private ?bool $statusActive = null;
+    private ?bool $statusCancelled = null;
+    private ?bool $statusExpired = null;
 
     public function getCustomer(): ?Customer
     {
@@ -68,5 +71,35 @@ class PaymentMandateFilter implements PageableInterface
     public function setStatusIds(?array $statusIds): void
     {
         $this->statusIds = $statusIds;
+    }
+
+    public function getStatusActive(): ?bool
+    {
+        return $this->statusActive;
+    }
+
+    public function setStatusActive(?bool $statusActive): void
+    {
+        $this->statusActive = $statusActive;
+    }
+
+    public function getStatusCancelled(): ?bool
+    {
+        return $this->statusCancelled;
+    }
+
+    public function setStatusCancelled(?bool $statusCancelled): void
+    {
+        $this->statusCancelled = $statusCancelled;
+    }
+
+    public function getStatusExpired(): ?bool
+    {
+        return $this->statusExpired;
+    }
+
+    public function setStatusExpired(?bool $statusExpired): void
+    {
+        $this->statusExpired = $statusExpired;
     }
 }

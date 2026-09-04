@@ -161,7 +161,9 @@ class PaymentsRepository extends DefaultRepository
 
     public function getMandatesByFilter(PaymentMandateFilter $filter): array
     {
-        $select = $this->getDb()->select('m.*')->from('payment_mandate', 'm');
+        $select = $this->getDb()->select('m.*')->from('payment_mandate', 'm')
+            ->innerJoin('m', 'payment_mandate_status', 's', 'm.status_id=s.id');
+
         if ($filter->getCustomer() !== null) {
             $select->andWhere('m.customer_id=:customer_id')
                 ->setParameter('customer_id', $filter->getCustomer()->getId());
@@ -183,6 +185,20 @@ class PaymentsRepository extends DefaultRepository
         if ($filter->getStatusIds() !== null) {
             $select->andWhere('m.status_id in (:status_ids)')
                 ->setParameter('status_ids', $filter->getStatusIds(), ArrayParameterType::INTEGER);
+        }
+
+        if ($filter->getStatusActive() !== null) {
+            $select->andWhere('s.active=:status_active')
+                ->setParameter('status_active', $filter->getStatusActive());
+        }
+        if ($filter->getStatusCancelled() !== null) {
+            $select->andWhere('s.active=:status_cancelled')
+                ->setParameter('status_cancelled', $filter->getStatusCancelled());
+        }
+
+        if ($filter->getStatusExpired() !== null) {
+            $select->andWhere('s.expired=:status_expired')
+                ->setParameter('status_expired', $filter->getStatusExpired());
         }
 
         $this->applyCountAndLimit($select, $filter);
