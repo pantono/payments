@@ -155,7 +155,7 @@ class StripeWebhookProcessor
                 if ($this->parameters->get('status') === 'succeeded') {
                     $mandate->setStartDate(new \DateTimeImmutable());
                     //Make it expired as it is no longer applicable, overwritten by payment method
-                    $status = $this->payments->getMandateStatusById(Payments::MANDATE_STATUS_EXPIRED);
+                    $status = $this->payments->getMandateStatusById(Payments::MANDATE_STATUS_CANCELLED);
                     if ($status) {
                         $mandate->setStatus($status);
                         $this->payments->addHistoryToMandate($mandate, 'Completed mandate setup', $this->parameters->all());
