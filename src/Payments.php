@@ -44,6 +44,7 @@ class Payments
     public const MANDATE_STATUS_CANCELLED = 3;
     public const MANDATE_STATUS_EXPIRED = 4;
     public const MANDATE_STATUS_ERROR = 5;
+    public const MANDATE_STATUS_STRIPE_SETUP_COMPLETED = 6;
     private Config $config;
     private LocatorInterface $locator;
 
