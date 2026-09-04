@@ -30,6 +30,9 @@ class PaymentMandate
     private array $setupData = [];
     #[Filter('json_decode')]
     private array $responseData = [];
+    private ?string $description = null;
+    #[Filter('json_decode')]
+    private array $metadata = [];
 
     public function getId(): ?int
     {
@@ -147,6 +150,26 @@ class PaymentMandate
         $this->customer = $customer;
     }
 
+    public function getDescription(): ?string
+    {
+        return $this->description;
+    }
+
+    public function setDescription(?string $description): void
+    {
+        $this->description = $description;
+    }
+
+    public function getMetadata(): array
+    {
+        return $this->metadata;
+    }
+
+    public function setMetadata(array $metadata): void
+    {
+        $this->metadata = $metadata;
+    }
+
     public function toArray(): array
     {
         return [
@@ -159,6 +182,8 @@ class PaymentMandate
             'currency' => $this->getCurrency(),
             'setup_data' => $this->getSetupData(),
             'response_data' => $this->getResponseData(),
+            'description' => $this->getDescription(),
+            'metadata' => $this->getMetadata()
         ];
     }
 }

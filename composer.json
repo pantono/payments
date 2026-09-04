@@ -17,7 +17,8 @@
     "omnipay/paypal": "^3.0",
     "stripe/stripe-php": "^21",
     "braintree/braintree_php": "^6.27",
-    "gocardless/gocardless-pro": "^7.2"
+    "gocardless/gocardless-pro": "^7.2",
+    "pantono/utilities": "^1.0"
   },
   "require-dev": {
     "phpunit/phpunit": "^12",

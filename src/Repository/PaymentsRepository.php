@@ -10,6 +10,7 @@ use Pantono\Payments\Filter\PaymentFilter;
 use Pantono\Customers\Model\Customer;
 use Pantono\Database\Repository\DefaultRepository;
 use Pantono\Payments\Filter\PaymentMandateFilter;
+use Doctrine\DBAL\ArrayParameterType;
 
 class PaymentsRepository extends DefaultRepository
 {
@@ -177,6 +178,11 @@ class PaymentsRepository extends DefaultRepository
         if ($filter->getDateCreatedEnd() !== null) {
             $select->andWhere('m.date_created<=:date_created_end')
                 ->setParameter('date_created_end', $filter->getDateCreatedEnd()->format('Y-m-d H:i:s'));
+        }
+
+        if ($filter->getStatusIds() !== null) {
+            $select->andWhere('m.status_id in (:status_ids)')
+                ->setParameter('status_ids', $filter->getStatusIds(), ArrayParameterType::INTEGER);
         }
 
         $this->applyCountAndLimit($select, $filter);

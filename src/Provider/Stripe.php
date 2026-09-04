@@ -16,9 +16,11 @@ use Pantono\Customers\Customers;
 use Stripe\Exception\ApiErrorException;
 use Stripe\Event;
 use Pantono\Payments\Provider\Stripe\StripeWebhookProcessor;
+use Pantono\Payments\Provider\Stripe\StripePaymentMethodDescriber;
 use Pantono\Logger\Logger;
 use Stripe\ApiRequestor;
 use Pantono\Payments\Provider\Stripe\LoggedStripeClient;
+use Pantono\Payments\Exception\InvalidMandateException;
 
 class Stripe extends AbstractProvider
 {
@@ -98,20 +100,18 @@ class Stripe extends AbstractProvider
                 }
                 if ($intent->latest_charge) {
                     $charge = $this->getClient()->charges->retrieve($intent->latest_charge);
-                    if ($charge->payment_method_details->card) {
-                        $cardData = $charge->payment_method_details->card->toArray();
-                        $brand = $cardData['display_brand'] ?? $cardData['brand'] ?? null;
-                        $last4 = $cardData['last4'] ?? null;
-                        if ($brand && $last4) {
-                            $payment->setPaymentMethodName($brand . ' ending ' . $last4);
-                        } else {
-                            $payment->setPaymentMethodName($brand);
-                        }
+                    $card = $charge->payment_method_details->card ?? null;
+                    if ($card) {
+                        $cardData = $card->toArray();
                         $payment->setCardData($cardData);
                         $code = $cardData['authorization_code'] ?? null;
                         if ($code) {
                             $payment->setAuthCode($code);
                         }
+                    }
+                    $methodName = StripePaymentMethodDescriber::describe($charge->payment_method_details?->toArray() ?? []);
+                    if ($methodName !== null) {
+                        $payment->setPaymentMethodName($methodName);
                     }
                 }
             }
@@ -197,13 +197,19 @@ class Stripe extends AbstractProvider
         if (!$customerId) {
             throw new \RuntimeException('Stripe customer id not found');
         }
-        $methodId = $this->getClient()->paymentMethods->retrieve($mandate->getResponseData()['payment_method']);
-        $methodName = $this->getPaymentMethodNameFromId($methodId);
+        if (!$mandate->getReference()) {
+            throw new InvalidMandateException('Invalid mandate reference');
+        }
+        try {
+            $this->getClient()->paymentMethods->retrieve($mandate->getReference());
+        } catch (ApiErrorException $e) {
+            throw new InvalidMandateException('Mandate does not exist');
+        }
         $response = $this->getClient()->paymentIntents->create([
             'amount' => $amountInPence,
             'currency' => 'gbp',
             'customer' => $customerId,
-            'payment_method' => $mandate->getResponseData()['payment_method'],
+            'payment_method' => $mandate->getReference(),
             'off_session' => true,
             'confirm' => true,
             'description' => $description
@@ -212,7 +218,7 @@ class Stripe extends AbstractProvider
         $payment->setAmount($amountInPence);
         $payment->setCurrency('gbp');
         $payment->setGateway($this->getGateway());
-        $payment->setPaymentMethodName($methodName);
+        $payment->setPaymentMethodName($mandate->getDescription());
         $payment->setMandate($mandate);
         $payment->setReference($description);
         $payment->setDateCreated(new \DateTimeImmutable());
@@ -267,7 +273,7 @@ class Stripe extends AbstractProvider
                         $webhook->setVerified(true);
                         $webhook->setDecodedData($event->toArray());
                         $this->payments->saveWebhook($webhook);
-                        $processor = new StripeWebhookProcessor($this->payments, $event);
+                        $processor = new StripeWebhookProcessor($this->payments, $event, $this->customers);
                         $processor->process();
                     } catch (SignatureVerificationException $e) {
                         $webhook->setVerified(false);
@@ -329,20 +335,5 @@ class Stripe extends AbstractProvider
             $this->client = new StripeClient($params);
         }
         return $this->client;
-    }
-
-
-    private function getPaymentMethodNameFromId(string $id): string
-    {
-        try {
-            $method = $this->getClient()->paymentMethods->retrieve($id);
-            if ($method->card) {
-                return $method->card->display_brand . ' ending ' . $method->card->last4;
-            }
-            return $method->type;
-        } catch (ApiErrorException $e) {
-
-        }
-        return 'Unknown';
     }
 }

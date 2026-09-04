@@ -15,6 +15,10 @@ class PaymentMandateFilter implements PageableInterface
     private ?PaymentMandateStatus $status = null;
     private ?\DateTimeInterface $dateCreatedStart = null;
     private ?\DateTimeInterface $dateCreatedEnd = null;
+    /**
+     * @var array<int>
+     */
+    private ?array $statusIds = [];
 
     public function getCustomer(): ?Customer
     {
@@ -54,5 +58,15 @@ class PaymentMandateFilter implements PageableInterface
     public function setDateCreatedEnd(?\DateTimeInterface $dateCreatedEnd): void
     {
         $this->dateCreatedEnd = $dateCreatedEnd;
+    }
+
+    public function getStatusIds(): ?array
+    {
+        return $this->statusIds;
+    }
+
+    public function setStatusIds(?array $statusIds): void
+    {
+        $this->statusIds = $statusIds;
     }
 }

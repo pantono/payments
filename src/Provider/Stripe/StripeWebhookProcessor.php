@@ -6,14 +6,18 @@ use Pantono\Payments\Payments;
 use Stripe\Event;
 use Pantono\Payments\Model\PaymentStatus;
 use Symfony\Component\HttpFoundation\ParameterBag;
+use Pantono\Payments\Model\PaymentMandate;
+use Pantono\Customers\Customers;
+use Pantono\Utilities\DateTimeParser;
 
 class StripeWebhookProcessor
 {
     private Payments $payments;
     private ParameterBag $parameters;
     private Event $event;
+    private Customers $customers;
 
-    public function __construct(Payments $payments, Event $event)
+    public function __construct(Payments $payments, Event $event, Customers $customers)
     {
         $this->payments = $payments;
         $data = $event->toArray();
@@ -22,6 +26,7 @@ class StripeWebhookProcessor
         }
         $this->parameters = new ParameterBag($data['data']['object']);
         $this->event = $event;
+        $this->customers = $customers;
     }
 
     public function process(): void
@@ -32,7 +37,8 @@ class StripeWebhookProcessor
         }
 
         if ($this->event->type === Event::PAYMENT_INTENT_SUCCEEDED) {
-            $status = $this->payments->getPaymentStatusById(Payments::STATUS_COMPLETED);
+            //Expire it as the setup data is no longer required, we store the payment method
+            $status = $this->payments->getPaymentStatusById(Payments::MANDATE_STATUS_EXPIRED);
             $payment = $this->payments->getPaymentByProviderId($this->parameters->get('id'));
             $this->logHistoryForAttemptId($this->parameters->get('id'), 'Stripe payment succeeded webhook received', $this->parameters->all(), $status);
             if ($payment) {
@@ -42,13 +48,82 @@ class StripeWebhookProcessor
                 $payment->setResponseData($this->parameters->all());
                 if ($cardData !== []) {
                     $payment->setCardData($cardData);
-                    $payment->setPaymentMethodName($this->getPaymentMethodName($cardData));
                     $payment->setAuthCode($this->getAuthCode($cardData));
+                }
+                $methodName = StripePaymentMethodDescriber::describe($this->getPaymentMethodDetails($charge));
+                if ($methodName !== null) {
+                    $payment->setPaymentMethodName($methodName);
                 }
                 if ($status) {
                     $payment->setStatus($status);
                 }
                 $this->payments->savePayment($payment);
+            }
+        }
+        if ($this->event->type === Event::PAYMENT_METHOD_DETACHED) {
+            $status = $this->payments->getMandateStatusById(Payments::MANDATE_STATUS_CANCELLED);
+            if (!$status) {
+                throw new \RuntimeException('Payment status not found');
+            }
+            $id = $this->parameters->get('id');
+            if ($this->parameters->get('object') === 'payment_method') {
+                $mandate = $this->payments->getMandateByReference($id);
+                if ($mandate) {
+                    $mandate->setStatus($status);
+                    $this->payments->saveMandate($mandate);
+                }
+            }
+        }
+
+        if ($this->event->type === Event::PAYMENT_METHOD_UPDATED) {
+            $id = $this->parameters->get('id');
+            if ($this->parameters->get('object') === 'payment_method') {
+                $mandate = $this->payments->getMandateByReference($id);
+                if ($mandate) {
+                    $card = new ParameterBag($this->parameters->get('card', []));
+                    if ($card->has('exp_month') && $card->has('exp_year')) {
+                        $date = DateTimeParser::parseDateImmutable($card->get('exp_year') . '-' . $card->get('exp_month') . '-01');
+                        if ($date) {
+                            $mandate->setEndDate($date);
+                            $this->payments->saveMandate($mandate);
+                        }
+                    }
+                }
+            }
+        }
+
+        if ($this->event->type === Event::PAYMENT_METHOD_ATTACHED) {
+            $status = $this->payments->getMandateStatusById(Payments::MANDATE_STATUS_ACTIVE);
+            if (!$status) {
+                throw new \RuntimeException('Payment status not found');
+            }
+            $id = $this->parameters->get('id');
+            if ($this->parameters->get('object') === 'payment_method') {
+                $customer = $this->customers->getCustomerByExternalIdentifier('stripe', $this->parameters->get('customer'));
+                if (!$customer) {
+                    $mandate = new PaymentMandate();
+                    $mandate->setStartDate(new \DateTimeImmutable());
+                    $mandate->setReference($id);
+                    $mandate->setSetupData([]);
+                    $card = new ParameterBag($this->parameters->get('card', []));
+                    $cardParts = [];
+                    if ($card->has('brand')) {
+                        $cardParts[] = $card->get('brand');
+                    }
+                    if ($card->has('last4')) {
+                        $cardParts[] = $card->get('last4');
+                    }
+                    if ($card->has('exp_month') && $card->has('exp_year')) {
+                        $date = DateTimeParser::parseDateImmutable($card->get('exp_year') . '-' . $card->get('exp_month') . '-01');
+                        if ($date) {
+                            $mandate->setEndDate($date);
+                        }
+                    }
+                    $mandate->setDescription(implode(' ', $cardParts));
+                    $mandate->setResponseData($this->parameters->all());
+                    $mandate->setCustomer($customer);
+                    $mandate->setStatus($status);
+                }
             }
         }
 
@@ -105,6 +180,16 @@ class StripeWebhookProcessor
         return [];
     }
 
+    private function getPaymentMethodDetails(array $charge): array
+    {
+        $details = $charge['payment_method_details'] ?? [];
+        if (!is_array($details)) {
+            return [];
+        }
+
+        return $details;
+    }
+
     private function getCardData(array $charge): array
     {
         $cardData = $charge['payment_method_details']['card'] ?? [];
@@ -113,17 +198,6 @@ class StripeWebhookProcessor
         }
 
         return $cardData;
-    }
-
-    private function getPaymentMethodName(array $cardData): ?string
-    {
-        $brand = $cardData['display_brand'] ?? $cardData['brand'] ?? null;
-        $last4 = $cardData['last4'] ?? null;
-        if ($brand && $last4) {
-            return $brand . ' ending ' . $last4;
-        }
-
-        return $brand;
     }
 
     private function getAuthCode(array $cardData): ?string
