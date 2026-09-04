@@ -56,6 +56,7 @@ final class PaymentsMigration extends BasePantonoMigration
             ['id' => 3, 'name' => 'Cancelled', 'active' => 0, 'cancelled' => 1, 'expired' => 0],
             ['id' => 4, 'name' => 'Expired', 'active' => 0, 'cancelled' => 0, 'expired' => 1],
             ['id' => 5, 'name' => 'Error', 'active' => 0, 'cancelled' => 0, 'expired' => 0],
+            ['id' => 6, 'name' => 'Stripe Setup Intent Completed', 'active' => 0, 'cancelled' => 0, 'expired' => 0],
         ]);
 
         $this->tablePrefix('payment_mandate')
