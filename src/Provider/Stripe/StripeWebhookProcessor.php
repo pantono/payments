@@ -123,6 +123,7 @@ class StripeWebhookProcessor
                     $mandate->setResponseData($this->parameters->all());
                     $mandate->setCustomer($customer);
                     $mandate->setStatus($status);
+                    $this->payments->saveMandate($mandate);
                 }
             }
         }
