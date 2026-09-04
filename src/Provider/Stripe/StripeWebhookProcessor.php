@@ -39,7 +39,7 @@ class StripeWebhookProcessor
 
         if ($this->event->type === Event::PAYMENT_INTENT_SUCCEEDED) {
             //Expire it as the setup data is no longer required, we store the payment method
-            $status = $this->payments->getPaymentStatusById(Payments::MANDATE_STATUS_EXPIRED);
+            $status = $this->payments->getPaymentStatusById(Payments::STATUS_COMPLETED);
             $payment = $this->payments->getPaymentByProviderId($this->parameters->get('id'));
             $this->logHistoryForAttemptId($this->parameters->get('id'), 'Stripe payment succeeded webhook received', $this->parameters->all(), $status);
             if ($payment) {
@@ -154,7 +154,8 @@ class StripeWebhookProcessor
                 $mandate->setResponseData($this->parameters->all());
                 if ($this->parameters->get('status') === 'succeeded') {
                     $mandate->setStartDate(new \DateTimeImmutable());
-                    $status = $this->payments->getMandateStatusById(Payments::MANDATE_STATUS_ACTIVE);
+                    //Make it expired as it is no longer applicable, overwritten by payment method
+                    $status = $this->payments->getMandateStatusById(Payments::MANDATE_STATUS_EXPIRED);
                     if ($status) {
                         $mandate->setStatus($status);
                         $this->payments->addHistoryToMandate($mandate, 'Completed mandate setup', $this->parameters->all());
