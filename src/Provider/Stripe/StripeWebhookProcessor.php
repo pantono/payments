@@ -100,7 +100,7 @@ class StripeWebhookProcessor
             $id = $this->parameters->get('id');
             if ($this->parameters->get('object') === 'payment_method') {
                 $customer = $this->customers->getCustomerByExternalIdentifier('stripe', $this->parameters->get('customer'));
-                if (!$customer) {
+                if ($customer) {
                     $mandate = new PaymentMandate();
                     $mandate->setStartDate(new \DateTimeImmutable());
                     $mandate->setReference($id);
