@@ -110,7 +110,7 @@ class Payments
         return $this->hydrator->hydrateSet(PaymentGateway::class, $this->repository->getGatewaysByProvider($id));
     }
 
-    public function createPayment(PaymentGateway $gateway, int $amountInPence, array $requestData = [], string $currency = 'gbp'): Payment
+    public function createPayment(PaymentGateway $gateway, int $amountInPence, array $data = [], string $currency = 'gbp'): Payment
     {
         $pendingStatus = $this->getPaymentStatusById(self::STATUS_PENDING);
         if ($pendingStatus === null) {
@@ -123,7 +123,7 @@ class Payments
         $payment->setCurrency($currency);
         $payment->setGateway($gateway);
         $payment->setAmount($amountInPence);
-        $payment->setRequestData($requestData);
+        $payment->setData($data);
         $payment->setStatus($pendingStatus);
         $this->savePayment($payment);
         $this->getProviderController($gateway)->initiatePayment($payment);
