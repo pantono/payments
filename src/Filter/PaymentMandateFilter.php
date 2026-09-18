@@ -16,9 +16,9 @@ class PaymentMandateFilter implements PageableInterface
     private ?\DateTimeInterface $dateCreatedStart = null;
     private ?\DateTimeInterface $dateCreatedEnd = null;
     /**
-     * @var array<int>
+     * @var array<int>|null
      */
-    private ?array $statusIds = [];
+    private ?array $statusIds = null;
     private ?bool $statusActive = null;
     private ?bool $statusCancelled = null;
     private ?bool $statusExpired = null;
