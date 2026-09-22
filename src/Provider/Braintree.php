@@ -253,6 +253,15 @@ class Braintree extends AbstractProvider
     {
         $parent = $payment->getParentPayment();
         if ($parent && $parent->getProviderId()) {
+            $current = $this->createClient()->transaction()->find($parent->getProviderId());
+            if ($current instanceof NotFound) {
+                throw new RefundFailedException('Parent transaction does not exist');
+            }
+            $transData = $current->toArray();
+            $status = $transData['status'] ?? null;
+            if ($status === 'submitted_for_settlement') {
+                throw new RefundFailedException('Transaction cannot be refunded until it has been settled');
+            }
             if ($amountInPence === 0) {
                 /**
                  * @var Error|Successful|NotFound $result
