@@ -258,7 +258,7 @@ class Payments
         $refund->setParentPayment($payment);
         $this->savePayment($payment);
         if ($processWithGateway) {
-            $this->getProviderController($payment->getGateway())->performRefund($payment, $amountInPence);
+            $this->getProviderController($payment->getGateway())->performRefund($refund, $amountInPence);
         }
         return $refund;
     }
