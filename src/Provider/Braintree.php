@@ -15,6 +15,7 @@ use Pantono\Payments\Model\PaymentWebhook;
 use Symfony\Component\HttpFoundation\ParameterBag;
 use Pantono\Payments\Exception\RefundFailedException;
 use Braintree\Transaction;
+use Braintree\Exception\NotFound;
 
 class Braintree extends AbstractProvider
 {
@@ -253,8 +254,14 @@ class Braintree extends AbstractProvider
         $parent = $payment->getParentPayment();
         if ($parent && $parent->getProviderId()) {
             if ($amountInPence === 0) {
+                /**
+                 * @var Error|Successful|NotFound $result
+                 */
                 $result = $this->createClient()->transaction()->refund($parent->getProviderId(), (string)($amountInPence / 100));
             } else {
+                /**
+                 * @var Error|Successful|NotFound $result
+                 */
                 $result = $this->createClient()->transaction()->refund($parent->getProviderId());
             }
             if ($result instanceof Successful) {
@@ -264,9 +271,18 @@ class Braintree extends AbstractProvider
                 if ($failedStatus) {
                     $payment->setStatus($failedStatus);
                 }
-                $payment->setResponseData(['error' => $result->getMessage()]);
+                if ($result instanceof Error) {
+                    $resultArray = $result->toArray();
+                    $message = $resultArray['message'];
+                } else {
+                    $message = 'Payment does not exist';
+                }
+                if (!$message) {
+                    $message = 'Unknown Error';
+                }
+                $payment->setResponseData(['error' => $message]);
                 $this->payments->savePayment($payment);
-                throw new RefundFailedException($result->getMessage());
+                throw new RefundFailedException($message);
             }
         }
     }
