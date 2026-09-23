@@ -262,16 +262,15 @@ class Braintree extends AbstractProvider
             if ($status === 'submitted_for_settlement') {
                 throw new RefundFailedException('Transaction cannot be refunded until it has been settled');
             }
-            if ($amountInPence === 0) {
-                /**
-                 * @var Error|Successful|NotFound $result
-                 */
-                $result = $this->createClient()->transaction()->refund($parent->getProviderId(), (string)($amountInPence / 100));
+            if ($amountInPence !== 0) {
+                $result = $this->createClient()->transaction()->refund(
+                    $parent->getProviderId(),
+                    number_format($amountInPence / 100, 2, '.', '')
+                );
             } else {
-                /**
-                 * @var Error|Successful|NotFound $result
-                 */
-                $result = $this->createClient()->transaction()->refund($parent->getProviderId());
+                $result = $this->createClient()->transaction()->refund(
+                    $parent->getProviderId()
+                );
             }
             if ($result instanceof Successful) {
                 $this->updatePaymentSuccess($payment, $result->transaction);
